@@ -20,38 +20,24 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"net/http"
-	"strconv"
+	"github.com/stormfirefox1/VianuEdu-Server/API"
 )
 
-func init() {
-	log.SetOutput(&lumberjack.Logger{
-		Filename:   "log/HTTPServer.log",
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28,   //days
-		Compress:   true, // disabled by default
-	})
+type Route struct {
+	Name        string
+	Method      string
+	Pattern     string
+	HandlerFunc http.HandlerFunc
 }
 
-func main() {
+type Routes []Route
 
-	log.WithFields(log.Fields{}).Info("VianuEdu-Server v0.1 ----------- BEGIN NEW LOG ------------")
-	log.Print("[BOOT] Reading configuration file...")
-
-	listenPortInt := GetListenPort()
-
-	listenPort := strconv.FormatInt(listenPortInt, 10)
-	listenPort = ":" + listenPort
-
-	log.Println("Done reading configuration file")
-	log.Print("[BOOT] Configuring HTTP Server...")
-
-	router := CreateRouter()
-	log.Println("Booting HTTP Server... DONE! Listening on port " + listenPort[1:])
-
-	http.ListenAndServe(listenPort, router)
-
+var routes = Routes{
+	Route{
+		"APIHelloWorld",
+		"GET",
+		"/api",
+		API.HelloWorld,
+	},
 }
