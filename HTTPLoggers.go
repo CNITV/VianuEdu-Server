@@ -20,31 +20,33 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
-	"net/http"
-	"time"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func Logger(inner http.Handler, name string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+var HTTPLogger *logrus.Logger
+var APILogger *logrus.Logger
 
-		inner.ServeHTTP(w, r)
+func init() {
 
-		log.SetOutput(&lumberjack.Logger{
-			Filename:   "log/APIRequests.log",
-			MaxSize:    500, // megabytes
-			MaxBackups: 3,
-			MaxAge:     28,   //days
-			Compress:   true, // disabled by default
-		})
+	HTTPLogger = logrus.New()
+	APILogger = logrus.New()
 
-		log.WithFields(log.Fields{
-			"method": r.Method,
-			"requestURI": r.RequestURI,
-			"name": name,
-			"time": time.Since(start),
-		}).Info()
-	})
+	HTTPLogger.Out = &lumberjack.Logger{
+		Filename:   "log/HTTPServer.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28,   //days
+		Compress:   true, // disabled by default
+	}
+	APILogger.Out = &lumberjack.Logger{
+		Filename:   "log/APIRequests.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28,   //days
+		Compress:   true, // disabled by default
+	}
+
+	HTTPLogger.Formatter = &logrus.TextFormatter{}
+	APILogger.Formatter = &logrus.TextFormatter{}
 }

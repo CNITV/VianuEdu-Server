@@ -21,26 +21,26 @@ package main
 
 import (
 	"net/http"
-	"strconv"
+	"io/ioutil"
+	log "github.com/sirupsen/logrus"
+	"fmt"
+	"os"
 )
 
-func main() {
+func dispense404(w http.ResponseWriter, r *http.Request) {
+	templateFile, err := os.Open("errors/404.html")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("Error opening 404 template file!")
+	}
+	defer templateFile.Close()
 
-	HTTPLogger.Println("VianuEdu-Server v0.1 ########################################################## BEGIN NEW LOG ##########################################################")
-	HTTPLogger.Println("[BOOT] Reading configuration file...")
-
-	listenPortInt := GetListenPort()
-
-	listenPort := strconv.FormatInt(listenPortInt, 10)
-	listenPort = ":" + listenPort
-
-	HTTPLogger.Println("[BOOT] Done reading configuration file")
-	HTTPLogger.Print("[BOOT] Configuring HTTP Server...")
-
-	router := CreateRouter()
-
-	HTTPLogger.Println("[BOOT] Booting HTTP Server... DONE! Listening on port " + listenPort[1:])
-
-	http.ListenAndServe(listenPort, router)
-
+	HTMLOutput, err := ioutil.ReadAll(templateFile)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("Error reading 404 template variable!")
+	}
+	fmt.Fprint(w, HTMLOutput)
 }

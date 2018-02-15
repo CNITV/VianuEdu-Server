@@ -22,19 +22,17 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+	"os"
+	"github.com/gorilla/handlers"
 )
 
-func CreateRouter() *mux.Router {
+func CreateRouter() http.Handler {
 
 	router := mux.NewRouter()
 
-	log.WithFields(log.Fields{}).Info("Configuring route handling for API...")
+	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring route handling for API...")
 	for _, route := range routes {
-		var handler http.Handler
-
-		handler = route.HandlerFunc
-		handler = Logger(handler, route.Name)
 
 		router.
 			Methods(route.Method).
@@ -42,20 +40,31 @@ func CreateRouter() *mux.Router {
 			Name(route.Name).
 			Handler(route.HandlerFunc)
 
-		log.WithFields(log.Fields{
+		HTTPLogger.WithFields(logrus.Fields{
 			"method":  route.Method,
 			"path":    route.Pattern,
 			"name":    route.Name,
 			"handler": route.HandlerFunc,
-		}).Info("Configured route for " + route.Name)
+		}).Info("[BOOT] Configured route for " + route.Name)
 	}
 
-	log.WithFields(log.Fields{}).Info("Configuring static site mapping...")
+	router.NotFoundHandler = http.HandlerFunc(dispense404)
+
+	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring static site mapping...")
 	router.Methods("GET").
 		PathPrefix("/").
 		Name("StaticSiteRoute").
 		Handler(http.StripPrefix("/", http.FileServer(http.Dir("static/"))))
 
-	return router
+	requestLog, err := os.OpenFile("log/HTTPRequests.log",  os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error opening HTTP requests log!")
+	}
+
+	loggedRouter := handlers.LoggingHandler(requestLog, router)
+
+	return loggedRouter
 
 }

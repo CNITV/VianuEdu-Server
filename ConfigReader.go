@@ -21,16 +21,16 @@ package main
 
 import (
 	"os"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"github.com/buger/jsonparser"
+	"github.com/sirupsen/logrus"
 )
 
 func GetListenPort() int64 {
 
 	configFile, err := os.Open("config/HTTPServer.json")
 	if err != nil {
-		log.WithFields(log.Fields{
+		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Fatal("Error opening HTTPServer configuration file!")
 	}
@@ -38,14 +38,14 @@ func GetListenPort() int64 {
 
 	mainConfig, err := ioutil.ReadAll(configFile)
 	if err != nil {
-		log.WithFields(log.Fields{
+		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
-		}).Fatal("Error reading HTTPServer configuration file!")
+		}).Fatal("Error reading HTTPServer configuration variable!")
 	}
-	log.Println("Reading listen port...")
+	HTTPLogger.Println("[BOOT] Reading listen port...")
 	listenPort, err := jsonparser.GetInt(mainConfig, "listenPort")
 	if err != nil {
-		log.WithFields(log.Fields{
+		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Fatal("Error parsing HTTPServer configuration file! (can't parse listenPort)")
 	}
