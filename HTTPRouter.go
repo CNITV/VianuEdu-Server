@@ -29,7 +29,7 @@ import (
 
 func CreateRouter() http.Handler {
 
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
 
 	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring route handling for API...")
 	for _, route := range routes {

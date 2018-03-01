@@ -24,6 +24,10 @@ import (
 	"strconv"
 )
 
+func redirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "https://127.0.0.1:443" + r.RequestURI, http.StatusMovedPermanently)
+}
+
 func main() {
 
 	HTTPLogger.Println("VianuEdu-Server v0.2 ########################################################## BEGIN NEW LOG ##########################################################")
@@ -35,12 +39,21 @@ func main() {
 	listenPort = ":" + listenPort
 
 	HTTPLogger.Println("[BOOT] Done reading configuration file")
+	HTTPLogger.Println("[BOOT] Initializing database backend...")
+
+	ConnectToDatabase()
+
 	HTTPLogger.Print("[BOOT] Configuring HTTP Server...")
 
 	router := CreateRouter()
 
-	HTTPLogger.Println("[BOOT] Booting HTTP Server... DONE! Listening on port " + listenPort[1:])
-
+	/* go http.ListenAndServeTLS(":443", "keys/VianuEdu_Server.crt", "keys/VianuEdu_Server.key", router)
+	 *
+	 * Commented for development purposes, unfortunately you cannot make anything work when you have to add exceptions everywhere.
+	 * However, when SSL is enabled, http.HandlerFunc(redirect) must be passed as router to http.ListenAndServe below.
+	 */
 	http.ListenAndServe(listenPort, router)
+
+	HTTPLogger.Println("[BOOT] Booting HTTP Server... DONE! Listening on port " + listenPort[1:])
 
 }
