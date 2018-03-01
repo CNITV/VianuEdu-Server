@@ -21,47 +21,9 @@ package main
 
 import (
 	"net/http"
+	"fmt"
 )
 
-type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
-}
-
-type Routes []Route
-
-var routes = Routes{
-
-	Route{
-		"GetStudent",
-		"GET",
-		"/api/getStudent/{id}",
-		getStudent,
-	},
-	Route{
-		"FindStudentID",
-		"GET",
-		"/api/findStudentID/",
-		findStudentID,
-	},
-	Route{
-		"GetTeacher",
-		"GET",
-		"/api/getTeacher/{id}",
-		getTeacher,
-	},
-	Route{
-		"FindTeacherID",
-		"GET",
-		"/api/findTeacherID/",
-		findTeacherID,
-	},
-	Route{
-		"GetAnswerSheet",
-		"GET",
-		"/api/getAnswerSheet/{studentID}/{testID}",
-		getAnswerSheet,
-	},
+func getAnswerSheet(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Not implemented yet!")
 }

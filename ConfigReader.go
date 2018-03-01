@@ -60,14 +60,12 @@ func GetDBConnectionURL() string {
 		}).Fatal("Error opening DatabaseSettings configuration file!")
 	}
 	defer configFile.Close()
-
 	mainConfig, err := ioutil.ReadAll(configFile)
 	if err != nil {
 		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Fatal("Error reading DatabaseSettings configuration variable!")
 	}
-
 	HTTPLogger.Println("[BOOT] Reading connection information...")
 	serverIP, err := jsonparser.GetString(mainConfig, "serverIP")
 	if err != nil {
@@ -93,8 +91,41 @@ func GetDBConnectionURL() string {
 			"error": err,
 		}).Fatal("Error parsing DatabaseSettings configuration file! (can't parse userPass)")
 	}
+	dbName, err := jsonparser.GetString(mainConfig, "databaseName")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error parsing DatabaseSettings configuration file! (can't parse databaseName)")
+	}
 
-	connectionURL := "mongodb://" + userName + ":" + userPass + "@" + serverIP + ":" + serverPort + "/VianuEdu"
+	connectionURL := "mongodb://" + userName + ":" + userPass + "@" + serverIP + ":" + serverPort + "/" + dbName
 
+	HTTPLogger.Println("[BOOT] Done reading configuration...")
 	return connectionURL
+}
+
+func getDBName() string {
+	configFile, err := os.Open("config/DatabaseSettings.json")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error opening DatabaseSettings configuration file!")
+	}
+	defer configFile.Close()
+
+	mainConfig, err := ioutil.ReadAll(configFile)
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error reading DatabaseSettings configuration variable!")
+	}
+
+	dbName, err := jsonparser.GetString(mainConfig, "databaseName")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error parsing DatabaseSettings configuration file! (can't parse databaseName)")
+	}
+
+	return dbName
 }

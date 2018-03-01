@@ -64,3 +64,6 @@ fabric.properties
 
 # Logs
 log/*
+
+#Private keys for TLS
+keys/*
