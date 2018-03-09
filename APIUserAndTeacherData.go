@@ -20,9 +20,10 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 // Gets a student from the database based on the student ID presented.
@@ -34,17 +35,61 @@ func getStudent(w http.ResponseWriter, r *http.Request) {
 
 	student := GetStudentObjectByID(id)
 
+	responseCode := http.StatusOK
+
+	if student == "null\n" {
+		w.WriteHeader(http.StatusNotFound)
+		responseCode = http.StatusNotFound
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"id":           id,
+		"responseCode": responseCode,
+	}).Info("getStudent hit")
+
 	if r.Header.Get("Accept") == "text/plain" {
 		w.Header().Set("Content-Type", "text/plain")
 	} else {
 		w.Header().Set("Content-Type", "application/json")
 	}
 
-	fmt.Fprint(w, student)
+	if responseCode == http.StatusNotFound {
+		fmt.Fprint(w, "404 student not found")
+	} else {
+		fmt.Fprint(w, student)
+	}
+
 }
 
 func findStudentID(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Not implemented yet!")
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	studentID := FindStudentID(username, password)
+
+	responseCode := http.StatusOK
+
+	if studentID == "" {
+		w.WriteHeader(http.StatusNotFound)
+		responseCode = http.StatusNotFound
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"teacherID":    studentID,
+		"responseCode": responseCode,
+	}).Info("findStudentID hit")
+
+	w.Header().Set("Content-Type", "text/plain")
+
+	if responseCode == http.StatusNotFound {
+		fmt.Fprint(w, "404 student not found")
+	} else {
+		fmt.Fprint(w, studentID)
+	}
 }
 
 // Gets a student from the database based on the teacher ID presented.
@@ -56,15 +101,59 @@ func getTeacher(w http.ResponseWriter, r *http.Request) {
 
 	teacher := GetTeacherObjectByID(id)
 
+	responseCode := http.StatusOK
+
+	if teacher == "null\n" {
+		w.WriteHeader(http.StatusNotFound)
+		responseCode = http.StatusNotFound
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"id":           id,
+		"responseCode": responseCode,
+	}).Info("getTeacher hit")
+
 	if r.Header.Get("Accept") == "text/plain" {
 		w.Header().Set("Content-Type", "text/plain")
 	} else {
 		w.Header().Set("Content-Type", "application/json")
 	}
 
-	fmt.Fprint(w, teacher)
+	if responseCode == http.StatusNotFound {
+		fmt.Fprint(w, "404 student not found")
+	} else {
+		fmt.Fprint(w, teacher)
+	}
 }
 
 func findTeacherID(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Not implemented yet!")
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	teacherID := FindTeacherID(username, password)
+
+	responseCode := http.StatusOK
+
+	if teacherID == "" {
+		w.WriteHeader(http.StatusNotFound)
+		responseCode = http.StatusNotFound
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"teacherID":    teacherID,
+		"responseCode": responseCode,
+	}).Info("findTeacherID hit")
+
+	w.Header().Set("Content-Type", "text/plain")
+
+	if responseCode == http.StatusNotFound {
+		fmt.Fprint(w, "404 student not found")
+	} else {
+		fmt.Fprint(w, teacherID)
+	}
 }

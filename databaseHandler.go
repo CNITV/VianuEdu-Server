@@ -20,9 +20,11 @@
 package main
 
 import (
+	"github.com/buger/jsonparser"
 	"github.com/globalsign/mgo"
-	"github.com/sirupsen/logrus"
 	"github.com/globalsign/mgo/bson"
+	"github.com/sirupsen/logrus"
+	"strings"
 )
 
 var session *mgo.Session
@@ -42,8 +44,7 @@ func ConnectToDatabase() {
 
 }
 
-func GetStudentObjectByID (id string) string {
-
+func GetStudentObjectByID(id string) string {
 	var queryMap []bson.M
 
 	studentAccountsCollection := session.DB(dbName).C("Students.Accounts")
@@ -65,7 +66,7 @@ func GetStudentObjectByID (id string) string {
 	return string(result)
 }
 
-func GetTeacherObjectByID (id string) string {
+func GetTeacherObjectByID(id string) string {
 	var queryMap []bson.M
 
 	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
@@ -87,4 +88,68 @@ func GetTeacherObjectByID (id string) string {
 	return string(result)
 }
 
+func FindTeacherID(user string, password string) string {
+	var queryMap []bson.M
 
+	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
+
+	err := teachersAccountsCollection.Find(bson.M{"account.userName": user, "account.password": password}).All(&queryMap)
+
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not find teacher ID in database with username" + user + "and password " + password)
+
+	}
+
+	teacher, err := bson.MarshalJSON(queryMap)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal findTeacherID request in JSON!")
+	}
+
+	jsonString := string(teacher)
+
+	jsonString = strings.Trim(jsonString, "[")
+	jsonString = strings.Split(jsonString, "]")[0]
+
+	data := []byte(jsonString)
+
+	result, err := jsonparser.GetString(data, "_id", "$oid")
+
+	return result
+}
+
+func FindStudentID(user string, password string) string {
+	var queryMap []bson.M
+
+	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
+
+	err := studentsAccountsCollection.Find(bson.M{"account.userName": user, "account.password": password}).All(&queryMap)
+
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not find student ID in database with username" + user + "and password " + password)
+
+	}
+
+	student, err := bson.MarshalJSON(queryMap)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal findStudentID request in JSON!")
+	}
+
+	jsonString := string(student)
+
+	jsonString = strings.Trim(jsonString, "[")
+	jsonString = strings.Split(jsonString, "]")[0]
+
+	data := []byte(jsonString)
+
+	result, err := jsonparser.GetString(data, "_id", "$oid")
+
+	return result
+}
