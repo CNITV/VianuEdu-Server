@@ -63,6 +63,8 @@ func getStudent(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Gets the student ID by checking the database for the user with the provided username and password
+// Will return ID in text/plain form.
 func findStudentID(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
@@ -92,7 +94,7 @@ func findStudentID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Gets a student from the database based on the teacher ID presented.
+// Gets a teacher from the database based on the teacher ID presented.
 // Will return application/json content type unless text/plain is requested.
 func getTeacher(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
@@ -122,7 +124,7 @@ func getTeacher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if responseCode == http.StatusNotFound {
-		fmt.Fprint(w, "404 student not found")
+		fmt.Fprint(w, "404 teacher not found")
 	} else {
 		fmt.Fprint(w, teacher)
 	}
@@ -152,7 +154,7 @@ func findTeacherID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	if responseCode == http.StatusNotFound {
-		fmt.Fprint(w, "404 student not found")
+		fmt.Fprint(w, "404 teacher not found")
 	} else {
 		fmt.Fprint(w, teacherID)
 	}

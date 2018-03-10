@@ -56,14 +56,19 @@ func GetStudentObjectByID(id string) string {
 		}).Warn("Could not complete query for getStudent! ID might not exist!")
 	}
 
-	result, err := bson.MarshalJSON(queryMap)
+	jsonString, err := bson.MarshalJSON(queryMap)
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Warn("Could not marshal getStudent request in JSON!")
 	}
 
-	return string(result)
+	result := string(jsonString)
+
+	result = strings.Trim(result, "[")
+	result = strings.Split(result, "]")[0]
+
+	return result
 }
 
 func GetTeacherObjectByID(id string) string {
@@ -78,14 +83,19 @@ func GetTeacherObjectByID(id string) string {
 		}).Warn("Could not complete query for getTeacher! ID might not exist!")
 	}
 
-	result, err := bson.MarshalJSON(queryMap)
+	jsonString, err := bson.MarshalJSON(queryMap)
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Warn("Could not marshal getTeacher request in JSON!")
 	}
 
-	return string(result)
+	result := string(jsonString)
+
+	result = strings.Trim(result, "[")
+	result = strings.Split(result, "]")[0]
+
+	return result
 }
 
 func FindTeacherID(user string, password string) string {
