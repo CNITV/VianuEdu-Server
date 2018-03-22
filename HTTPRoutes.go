@@ -43,8 +43,14 @@ var routes = Routes{
 	Route{
 		"FindStudentID",
 		"GET",
-		"/api/findStudentID/",
+		"/api/findStudentID",
 		findStudentID,
+	},
+	Route{
+		"RegisterStudent",
+		"POST",
+		"/api/registerStudent",
+		registerStudent,
 	},
 	Route{
 		"GetTeacher",
@@ -55,8 +61,14 @@ var routes = Routes{
 	Route{
 		"FindTeacherID",
 		"GET",
-		"/api/findTeacherID/",
+		"/api/findTeacherID",
 		findTeacherID,
+	},
+	Route{
+		"RegisterTeacher",
+		"POST",
+		"/api/registerTeacher",
+		registerTeacher,
 	},
 	Route{
 		"GetAnswerSheet",

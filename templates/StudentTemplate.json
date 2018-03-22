@@ -1,0 +1,13 @@
+{
+  "account": {
+    "password": "randomshit",
+    "userName": "ILikeUserNames"
+  },
+  "fathersInitial": "C",
+  "firstName": "Ida",
+  "gender": "M",
+  "grade": 12,
+  "gradeLetter": "Z",
+  "lastName": "Wiener",
+  "status": "graduated"
+}

@@ -21,9 +21,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/buger/jsonparser"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/xeipuuv/gojsonschema"
+	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 // Gets a student from the database based on the student ID presented.
@@ -158,4 +162,96 @@ func findTeacherID(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprint(w, teacherID)
 	}
+}
+
+func registerStudent(w http.ResponseWriter, r *http.Request) {
+	templateFile, err := os.Open("templates/StudentTemplate.json")
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not open StudentTemplate file!")
+	}
+
+	templateString, err := ioutil.ReadAll(templateFile)
+
+	studentTemplate := gojsonschema.NewStringLoader(string(templateString))
+
+	body, err := ioutil.ReadAll(r.Body)
+
+	studentResponse := gojsonschema.NewStringLoader(string(body))
+
+	validation, err := gojsonschema.Validate(studentTemplate, studentResponse)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not validate JSON schema and document for registering Student")
+	}
+
+	responseCode := http.StatusOK
+
+	if validation.Valid() {
+		RegisterStudent(string(body))
+
+		username, _ := jsonparser.GetString(body, "account", "userName")
+		password, _ := jsonparser.GetString(body, "account", "password")
+
+		id := FindStudentID(username, password)
+
+		fmt.Fprint(w, id)
+	} else {
+		responseCode = http.StatusBadRequest
+		fmt.Fprint(w, "Sent student JSON not valid! Reevaluate")
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"responseCode": responseCode,
+	}).Info("registerStudent hit")
+}
+
+func registerTeacher(w http.ResponseWriter, r *http.Request) {
+	templateFile, err := os.Open("templates/TeacherTemplate.json")
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not open TeacherTemplate file!")
+	}
+
+	templateString, err := ioutil.ReadAll(templateFile)
+
+	teacherTemplate := gojsonschema.NewStringLoader(string(templateString))
+
+	body, err := ioutil.ReadAll(r.Body)
+
+	teacherResponse := gojsonschema.NewStringLoader(string(body))
+
+	validation, err := gojsonschema.Validate(teacherTemplate, teacherResponse)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not validate JSON schema and document for registering Teacher")
+	}
+
+	responseCode := http.StatusOK
+
+	if validation.Valid() {
+		RegisterTeacher(string(body))
+
+		username, _ := jsonparser.GetString(body, "account", "userName")
+		password, _ := jsonparser.GetString(body, "account", "password")
+
+		id := FindTeacherID(username, password)
+
+		fmt.Fprint(w, id)
+	} else {
+		responseCode = http.StatusBadRequest
+		fmt.Fprint(w, "Sent teacher JSON not valid! Reevaluate")
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"responseCode": responseCode,
+	}).Info("registerTeacher hit")
 }

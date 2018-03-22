@@ -163,3 +163,25 @@ func FindStudentID(user string, password string) string {
 
 	return result
 }
+
+func RegisterStudent(body string) {
+	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
+
+	err := studentsAccountsCollection.Insert(body)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not register student!")
+	}
+}
+
+func RegisterTeacher(body string) {
+	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
+
+	err := teachersAccountsCollection.Insert(body)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not register teacher!")
+	}
+}
