@@ -1,0 +1,23 @@
+{
+  "answers": {
+    "1": "When life gives you lemons, don\u0027t make lemonade.",
+    "2": "[MULTIPLE_ANSWER] a",
+    "3": "The supreme art of war is to subdue the enemy without fighting."
+  },
+  "numberOfAnswersFilled": 3,
+  "numberOfAnswers": 3,
+  "testID": "T-000000",
+  "student": {
+    "firstName": "Dexter",
+    "fathersInitial": "Z",
+    "lastName": "Iftode",
+    "gender": "M",
+    "grade": 12,
+    "gradeLetter": "Z",
+    "status": "graduated",
+    "account": {
+      "userName": "IfDex22",
+      "password": "parolasecreta"
+    }
+  }
+}

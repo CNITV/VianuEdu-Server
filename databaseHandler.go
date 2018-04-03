@@ -20,6 +20,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/buger/jsonparser"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -66,7 +67,7 @@ func GetStudentObjectByID(id string) string {
 	result := string(jsonString)
 
 	result = strings.Trim(result, "[")
-	result = strings.Split(result, "]")[0]
+	result = result[:len(result)-2]
 
 	return result
 }
@@ -93,7 +94,7 @@ func GetTeacherObjectByID(id string) string {
 	result := string(jsonString)
 
 	result = strings.Trim(result, "[")
-	result = strings.Split(result, "]")[0]
+	result = result[:len(result)-2]
 
 	return result
 }
@@ -122,7 +123,7 @@ func FindTeacherID(user string, password string) string {
 	jsonString := string(teacher)
 
 	jsonString = strings.Trim(jsonString, "[")
-	jsonString = strings.Split(jsonString, "]")[0]
+	jsonString = jsonString[:len(jsonString)-2]
 
 	data := []byte(jsonString)
 
@@ -142,7 +143,7 @@ func FindStudentID(user string, password string) string {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Warn("Could not find student ID in database with username" + user + "and password " + password)
-
+		return "notFound"
 	}
 
 	student, err := bson.MarshalJSON(queryMap)
@@ -155,7 +156,7 @@ func FindStudentID(user string, password string) string {
 	jsonString := string(student)
 
 	jsonString = strings.Trim(jsonString, "[")
-	jsonString = strings.Split(jsonString, "]")[0]
+	jsonString = jsonString[:len(jsonString)-2]
 
 	data := []byte(jsonString)
 
@@ -167,7 +168,11 @@ func FindStudentID(user string, password string) string {
 func RegisterStudent(body string) {
 	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
 
-	err := studentsAccountsCollection.Insert(body)
+	var document map[string]interface{}
+
+	err := json.Unmarshal([]byte(body), &document)
+
+	err = studentsAccountsCollection.Insert(document)
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
@@ -178,10 +183,67 @@ func RegisterStudent(body string) {
 func RegisterTeacher(body string) {
 	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
 
-	err := teachersAccountsCollection.Insert(body)
+	var document map[string]interface{}
+
+	err := json.Unmarshal([]byte(body), &document)
+
+	err = teachersAccountsCollection.Insert(document)
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Warn("Could not register teacher!")
+	}
+}
+
+func GetAnswerSheet(student string, testID string) string {
+	var queryMap []bson.M
+
+	submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
+
+	studentJSON := []byte(student)
+
+	username, _ := jsonparser.GetString(studentJSON, "account", "userName")
+	password, _ := jsonparser.GetString(studentJSON, "account", "password")
+
+	err := submittedAnswersCollection.Find(bson.M{"testID": testID, "student.account.userName": username, "student.account.password": password}).All(&queryMap)
+
+	studentID, _ := jsonparser.GetString([]byte(student), "_id", "$oid")
+
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error":     err,
+			"studentID": studentID,
+			"testID":    testID,
+		}).Warn("Could not find answer sheet in database!")
+
+	}
+
+	answerSheet, err := bson.MarshalJSON(queryMap)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal getAnswerSheet request in JSON!")
+	}
+
+	result := string(answerSheet)
+
+	result = strings.Trim(result, "[")
+	result = result[:len(result)-2]
+
+	return result
+}
+
+func AddAnswerSheet(answerSheet string) {
+	submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
+
+	var document map[string]interface{}
+
+	err := json.Unmarshal([]byte(answerSheet), &document)
+
+	err = submittedAnswersCollection.Insert(document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not add answer sheet!")
 	}
 }

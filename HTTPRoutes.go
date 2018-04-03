@@ -76,4 +76,10 @@ var routes = Routes{
 		"/api/getAnswerSheet/{studentID}/{testID}",
 		getAnswerSheet,
 	},
+	Route{
+		"SubmitAnswerSheet",
+		"POST",
+		"/api/submitAnswerSheet/{testID}",
+		submitAnswerSheet,
+	},
 }
