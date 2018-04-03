@@ -66,6 +66,10 @@ func GetStudentObjectByID(id string) string {
 
 	result := string(jsonString)
 
+	if result == "null\n" {
+		return "notFound"
+	}
+
 	result = strings.Trim(result, "[")
 	result = result[:len(result)-2]
 
@@ -92,6 +96,10 @@ func GetTeacherObjectByID(id string) string {
 	}
 
 	result := string(jsonString)
+
+	if result == "null\n" {
+		return "notFound"
+	}
 
 	result = strings.Trim(result, "[")
 	result = result[:len(result)-2]
@@ -227,6 +235,10 @@ func GetAnswerSheet(student string, testID string) string {
 
 	result := string(answerSheet)
 
+	if result == "null\n" {
+		return "notFound"
+	}
+
 	result = strings.Trim(result, "[")
 	result = result[:len(result)-2]
 
@@ -246,4 +258,81 @@ func AddAnswerSheet(answerSheet string) {
 			"error": err,
 		}).Warn("Could not add answer sheet!")
 	}
+}
+
+func GetGrade(studentUser string, testID string) string {
+
+	testType := GetTestType(testID)
+
+	gradesCollection := session.DB(dbName).C(testType + "Edu.Grades")
+
+	var gradeQuery []bson.M
+
+	err := gradesCollection.Find(bson.M{"studentAnswerSheet.testID": testID, "studentAnswerSheet.student.account.userName": studentUser}).All(&gradeQuery)
+
+	grade, err := bson.MarshalJSON(gradeQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal getGrade request in JSON!")
+	}
+
+	result := string(grade)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	result = strings.Trim(result, "[")
+	result = result[:len(result)-2]
+
+	return result
+
+}
+
+func AddGrade(grade string, testID string) {
+	testType := GetTestType(testID)
+
+	gradesCollection := session.DB(dbName).C(testType + "Edu.Grades")
+
+	var document map[string]interface{}
+
+	err := json.Unmarshal([]byte(grade), &document)
+
+	err = gradesCollection.Insert(document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not add grade!")
+	} else {
+		submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
+
+		username, _ := jsonparser.GetString([]byte(grade), "studentAnswerSheet", "student", "account", "userName")
+		password, _ := jsonparser.GetString([]byte(grade), "studentAnswerSheet", "student", "account", "password")
+
+		err := submittedAnswersCollection.Remove(bson.M{"testID": testID, "student.account.userName": username, "student.account.password": password})
+		if err != nil {
+			APILogger.WithFields(logrus.Fields{
+				"error": err,
+			}).Warn("Cannot remove answer sheet from database!")
+		}
+	}
+}
+
+func GetTestType(testID string) string {
+
+	var testQuery []bson.M
+
+	testList := session.DB(dbName).C("VianuEdu.TestList")
+
+	testList.FindId(testID).All(&testQuery)
+
+	query, _ := bson.MarshalJSON(testQuery)
+
+	query = query[1:]
+	query = query[:len(query)-2]
+
+	result, _ := jsonparser.GetString(query, "course")
+
+	return result
 }

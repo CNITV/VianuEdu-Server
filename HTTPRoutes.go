@@ -82,4 +82,16 @@ var routes = Routes{
 		"/api/submitAnswerSheet/{testID}",
 		submitAnswerSheet,
 	},
+	Route{
+		"GetGrade",
+		"GET",
+		"/api/getGrade/{studentID}/{testID}",
+		getGrade,
+	},
+	Route{
+		"SubmitGrade",
+		"POST",
+		"/api/submitGrade/{testID}",
+		submitGrade,
+	},
 }

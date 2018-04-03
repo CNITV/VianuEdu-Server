@@ -28,44 +28,27 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"regexp"
 )
 
-func getAnswerSheet(w http.ResponseWriter, r *http.Request) {
+func getGrade(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
-
-	regexTest, _ := regexp.Compile("T-([0123456789])\\w+")
-
-	responseCode := http.StatusOK
-
-	if regexTest.Match([]byte(requestVars["testID"])) == false {
-		responseCode = http.StatusBadRequest
-		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "Test ID invalid!")
-		return
-	}
 
 	student := GetStudentObjectByID(requestVars["studentID"])
 
-	if student == "notFound" {
-		responseCode = http.StatusBadRequest
+	user, _ := jsonparser.GetString([]byte(student), "account", "userName")
+
+	grade := GetGrade(user, requestVars["testID"])
+
+	responseCode := http.StatusOK
+
+	if grade == "notFound" {
+		responseCode = http.StatusNotFound
 		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "Student ID invalid!")
+		fmt.Fprint(w, "404 grade not found")
 		return
 	}
 
-	answerSheet := GetAnswerSheet(student, requestVars["testID"])
-
-	w.Header().Set("Content-Type", "application/json")
-
-	if answerSheet == "notFound" {
-		responseCode = http.StatusNotFound
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "404 answer sheet not found")
-	} else {
-		fmt.Fprint(w, answerSheet)
-	}
+	fmt.Fprint(w, grade)
 
 	APILogger.WithFields(logrus.Fields{
 		"host":         r.RemoteAddr,
@@ -73,11 +56,10 @@ func getAnswerSheet(w http.ResponseWriter, r *http.Request) {
 		"studentID":    requestVars["studentID"],
 		"testID":       requestVars["testID"],
 		"responseCode": responseCode,
-	}).Info("getAnswerSheet hit")
-
+	}).Info("getGrade hit")
 }
 
-func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
+func submitGrade(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 
 	//first we strip out the authentication from the header
@@ -85,9 +67,11 @@ func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 
 	responseCode := http.StatusOK
 
-	studentID := FindStudentID(username, password)
+	teacherID := FindTeacherID(username, password)
 
-	templateFile, _ := os.Open("templates/AnswerSheetTemplate.json")
+	templateFile, _ := os.Open("templates/GradeTemplate.json")
+
+	var studentID = ""
 
 	//then we check to see if authOK
 	if !authOK {
@@ -96,8 +80,8 @@ func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Invalid authentication scheme!")
 	}
 
-	//see if student exists
-	if studentID == "notFound" {
+	//see if teacher exists
+	if teacherID == "notFound" {
 		responseCode = http.StatusUnauthorized
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "Invalid username and password combination!")
@@ -109,64 +93,72 @@ func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 		//validate JSON!
 		templateString, err := ioutil.ReadAll(templateFile)
 
-		answerSheetTemplate := gojsonschema.NewStringLoader(string(templateString))
+		gradeTemplate := gojsonschema.NewStringLoader(string(templateString))
 
 		body, err := ioutil.ReadAll(r.Body)
 
-		answerSheetResponse := gojsonschema.NewStringLoader(string(body))
+		gradeResponse := gojsonschema.NewStringLoader(string(body))
 
-		validation, err := gojsonschema.Validate(answerSheetTemplate, answerSheetResponse)
+		validation, err := gojsonschema.Validate(gradeTemplate, gradeResponse)
 		if err != nil {
 			APILogger.WithFields(logrus.Fields{
 				"error": err,
-			}).Warn("Could not validate JSON schema and document for adding answer sheet!")
+			}).Warn("Could not validate JSON schema and document for adding grade!")
 		}
 
 		if validation.Valid() {
 			//don't need errors here because I've already validated the JSON and know that it will work
-			user, err := jsonparser.GetString(body, "student", "account", "userName")
-			pass, err := jsonparser.GetString(body, "student", "account", "password")
-			if err != nil {
-				APILogger.WithFields(logrus.Fields{
-					"error": err,
-				}).Warn("Cannot get user and pass from body JSON!")
-			}
+			username, _ := jsonparser.GetString(body, "teacher", "account", "userName")
+			password, _ := jsonparser.GetString(body, "teacher", "account", "password")
 
-			checkID := FindStudentID(user, pass)
+			studentUser, _ := jsonparser.GetString(body, "studentAnswerSheet", "student", "account", "userName")
+			studentPass, _ := jsonparser.GetString(body, "studentAnswerSheet", "student", "account", "password")
 
-			if checkID != studentID {
+			studentID = FindStudentID(studentUser, studentPass)
+
+			checkID := FindTeacherID(username, password)
+
+			if checkID != teacherID {
 				responseCode = http.StatusUnauthorized
 				w.WriteHeader(responseCode)
-				fmt.Fprint(w, "Malformed answer sheet! (can't upload answer sheet on someone else's behalf")
+				fmt.Fprint(w, "Malformed grade! (can't upload grade on someone else's behalf")
 				return
 			}
 
-			testID, _ := jsonparser.GetString(body, "testID")
+			testID, _ := jsonparser.GetString(body, "studentAnswerSheet", "testID")
+			keyID, _ := jsonparser.GetString(body, "answerKey", "testID")
+
 			if testID != requestVars["testID"] {
 				responseCode = http.StatusBadRequest
 				w.WriteHeader(responseCode)
-				fmt.Fprint(w, "Cannot submit answer sheet from another test to this one!")
+				fmt.Fprint(w, "Cannot submit grade from another test to this one!")
 				return
 			}
 
-			student, _, _, _ := jsonparser.Get(body, "student")
+			if testID != keyID {
+				responseCode = http.StatusBadRequest
+				w.WriteHeader(responseCode)
+				fmt.Fprint(w, "Malformed grade! (Cannot have answer sheets from different tests!")
+				return
+			}
 
-			if GetAnswerSheet(string(student), testID) != "notFound" {
+			if GetGrade(studentUser, testID) != "notFound" {
 				responseCode = http.StatusAlreadyReported
 				w.WriteHeader(responseCode)
-				fmt.Fprint(w, "Cannot submit an answer sheet after it has already been submitted!")
+				fmt.Fprint(w, "Cannot submit a grade after it has already been submitted!")
 				return
 			}
 
-			AddAnswerSheet(string(body))
-			fmt.Fprint(w, "Answer sheet added! You can no longer add anything to this test!")
+			AddGrade(string(body), testID)
+			fmt.Fprint(w, "Grade added! You can no longer add anything to this test!")
 		}
 	}
 
 	APILogger.WithFields(logrus.Fields{
 		"host":         r.RemoteAddr,
 		"userAgent":    r.UserAgent(),
+		"teacherID":    teacherID,
 		"studentID":    studentID,
 		"responseCode": responseCode,
-	}).Info("submitAnswerSheet hit")
+	}).Info("submitGrade hit")
 }
