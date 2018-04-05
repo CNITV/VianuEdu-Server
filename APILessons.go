@@ -102,24 +102,12 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		APILogger.WithFields(logrus.Fields{
-			"error": err,
-		}).Warn("Cannot read body!")
-		return
-	}
-
-	contentType := http.DetectContentType(body)
-
-	if contentType != "application/pdf" || r.Header.Get("Content-Type") != "application/pdf" {
+	if r.Header.Get("Content-Type") != "application/pdf" {
 		responseCode = http.StatusBadRequest
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "Invalid file! Upload a PDF file!")
 		return
 	}
-
-	body = nil
 
 	fileName = fileName + r.Header.Get("filename")
 
@@ -129,6 +117,8 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 			"error": err,
 		}).Warn("Cannot open file for writing!")
 	}
+
+	defer out.Close()
 
 	_, err = io.Copy(out, r.Body)
 	if err != nil {
