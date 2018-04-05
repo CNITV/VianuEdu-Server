@@ -42,7 +42,7 @@ var routes = Routes{
 	},
 	Route{
 		"FindStudentID",
-		"GET",
+		"POST",
 		"/api/findStudentID",
 		findStudentID,
 	},
@@ -60,7 +60,7 @@ var routes = Routes{
 	},
 	Route{
 		"FindTeacherID",
-		"GET",
+		"POST",
 		"/api/findTeacherID",
 		findTeacherID,
 	},

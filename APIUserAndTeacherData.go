@@ -70,8 +70,15 @@ func getStudent(w http.ResponseWriter, r *http.Request) {
 // Gets the student ID by checking the database for the user with the provided username and password
 // Will return ID in text/plain form.
 func findStudentID(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
-	password := r.FormValue("password")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot parse body from request!")
+	}
+
+	username, err := jsonparser.GetString(body, "userName")
+	password, err := jsonparser.GetString(body, "password")
 
 	studentID := FindStudentID(username, password)
 
@@ -135,9 +142,15 @@ func getTeacher(w http.ResponseWriter, r *http.Request) {
 }
 
 func findTeacherID(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot parse body from request!")
+	}
 
-	username := r.FormValue("username")
-	password := r.FormValue("password")
+	username, err := jsonparser.GetString(body, "userName")
+	password, err := jsonparser.GetString(body, "password")
 
 	teacherID := FindTeacherID(username, password)
 
