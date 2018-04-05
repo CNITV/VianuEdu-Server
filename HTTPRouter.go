@@ -20,11 +20,11 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
-	"github.com/sirupsen/logrus"
-	"os"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"net/http"
+	"os"
 )
 
 func CreateRouter() http.Handler {
@@ -50,13 +50,19 @@ func CreateRouter() http.Handler {
 
 	router.NotFoundHandler = http.HandlerFunc(dispense404)
 
+	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring lessons download mapping...")
+	router.Methods("GET").
+		PathPrefix("/lessons/").
+		Name("LessonsRoute").
+		Handler(http.StripPrefix("/lessons/", http.FileServer(http.Dir("lessons/"))))
+
 	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring static site mapping...")
 	router.Methods("GET").
 		PathPrefix("/").
 		Name("StaticSiteRoute").
 		Handler(http.StripPrefix("/", http.FileServer(http.Dir("static/"))))
 
-	requestLog, err := os.OpenFile("log/HTTPRequests.log",  os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	requestLog, err := os.OpenFile("log/HTTPRequests.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,

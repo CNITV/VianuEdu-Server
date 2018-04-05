@@ -130,6 +130,10 @@ func FindTeacherID(user string, password string) string {
 
 	jsonString := string(teacher)
 
+	if jsonString == "null\n" {
+		return "notFound"
+	}
+
 	jsonString = strings.Trim(jsonString, "[")
 	jsonString = jsonString[:len(jsonString)-2]
 
@@ -162,6 +166,10 @@ func FindStudentID(user string, password string) string {
 	}
 
 	jsonString := string(student)
+
+	if jsonString == "null\n" {
+		return "notFound"
+	}
 
 	jsonString = strings.Trim(jsonString, "[")
 	jsonString = jsonString[:len(jsonString)-2]

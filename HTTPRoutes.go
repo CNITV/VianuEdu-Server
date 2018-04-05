@@ -94,4 +94,16 @@ var routes = Routes{
 		"/api/submitGrade/{testID}",
 		submitGrade,
 	},
+	Route{
+		"ListLessons",
+		"GET",
+		"/api/listLessons/{grade}",
+		listLessons,
+	},
+	Route{
+		"UploadLesson",
+		"POST",
+		"/api/uploadLesson/{grade}",
+		uploadLesson,
+	},
 }
