@@ -106,4 +106,10 @@ var routes = Routes{
 		"/api/uploadLesson/{grade}",
 		uploadLesson,
 	},
+	Route{
+		"AdminDownloadLogs",
+		"GET",
+		"/api/downloadLogs",
+		downloadLogs,
+	},
 }

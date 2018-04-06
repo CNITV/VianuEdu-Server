@@ -20,10 +20,10 @@
 package main
 
 import (
-	"os"
-	"io/ioutil"
 	"github.com/buger/jsonparser"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
 )
 
 func GetListenPort() int64 {
@@ -128,4 +128,37 @@ func getDBName() string {
 	}
 
 	return dbName
+}
+
+func GetAdminCreds() (string, string) {
+
+	configFile, err := os.Open("config/HTTPServer.json")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error opening HTTPServer configuration file!")
+	}
+	defer configFile.Close()
+
+	mainConfig, err := ioutil.ReadAll(configFile)
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error reading HTTPServer configuration variable!")
+	}
+	HTTPLogger.Println("[BOOT] Reading listen port...")
+	adminUser, err := jsonparser.GetString(mainConfig, "adminUser")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error parsing HTTPServer configuration file! (can't parse listenPort)")
+	}
+	adminPass, err := jsonparser.GetString(mainConfig, "adminPass")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error parsing HTTPServer configuration file! (can't parse listenPort)")
+	}
+
+	return adminUser, adminPass
 }

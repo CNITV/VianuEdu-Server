@@ -1,3 +1,5 @@
 {
-  "listenPort": 80
+  "listenPort": 80,
+  "adminUser": "[CONFIDENTIAL]",
+  "adminPass": "[CONFIDENTIAL]"
 }
