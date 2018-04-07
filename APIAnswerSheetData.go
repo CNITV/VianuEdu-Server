@@ -31,6 +31,12 @@ import (
 	"regexp"
 )
 
+// getAnswerSheet gets an AnswerSheet object from the database and send it to the client.
+// It will query the database for the AnswerSheet object attached to the student ID and test ID received.
+//
+// It will fail if the test ID is invalid, if the student ID is invalid and send back a Bad Request (400) response code.
+// It will also respond with a Resource Not Found response code (404) if there is no answer sheet attached to the
+// student ID and test ID combination.
 func getAnswerSheet(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 
@@ -77,6 +83,13 @@ func getAnswerSheet(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// submitAnswerSheet adds an answer sheet to the database, on the provided test ID by the provided student ID.
+//
+// It will fail if the authentication scheme is invalid, and send back a Unauthorized (401) response code.
+// It will fail if the student ID is not found and send back a Resource Not Found (404) response code.
+// It will also fail if the submitted answer sheet has an invalid JSON schema and send back Bad Request (400)
+// response code.
+// Any invalid combination of student ID - test ID will be responded with a Bad Request (400) response code.
 func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 

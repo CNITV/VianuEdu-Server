@@ -30,6 +30,9 @@ import (
 	"os"
 )
 
+// getGrade obtains a grade from the database by querying for student ID and test ID.
+//
+// It will send back a Resource Not Found (404) response code if there is no grade found.
 func getGrade(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 
@@ -59,6 +62,13 @@ func getGrade(w http.ResponseWriter, r *http.Request) {
 	}).Info("getGrade hit")
 }
 
+// submitGrade adds a grade to the database, to the provided student and test ID.
+//
+// Only teachers can submit grades to the database! Anyone else attempting to do so will be responded with a
+// Unauthorized (401) response code.
+//
+// Every single validation conducted within this HTTP handler function is directly equivalent in some way, shape, or
+// form to the submitAnswerSheet documentation. Refer there for details.
 func submitGrade(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 

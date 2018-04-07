@@ -31,12 +31,20 @@ import (
 	"strings"
 )
 
+// listLessons lists all of the lessons in the grade and subject provided in the request URL.
+//
+// Currently, the grades are only between 9 and 12. This is mostly due to the fact that, as the project stands, it will
+// be highly unlikely that any 1-8th grade will use this educational software.
+//
+// This function is most primarily constructed in order to allow for easy listing for all the available lessons that one
+// student may be interested in downloading to the client. It is given in such a way that it is very easy to split the
+// strings formed by the filenames into something easily readable.
 func listLessons(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 	responseCode := http.StatusOK
 
 	grade, err := strconv.Atoi(requestVars["grade"])
-	dirName := "lessons/" + strconv.Itoa(grade) + "/"
+	dirName := "lessons/" + requestVars["subject"] + "/" + strconv.Itoa(grade) + "/"
 	lessonsDir, _ := ioutil.ReadDir(dirName)
 	fileList := ""
 
@@ -69,13 +77,21 @@ log:
 	}).Info("listLessons hit")
 }
 
+// uploadLesson uploads a lesson to the repository, provided it is given valid teacher credentials.
+//
+// Currently, it does not differentiate whether a teacher should be able to upload for a specific subject, depending on
+// what they teach. This is in development and debate. TODO add check for subject-teacher validation
+//
+// Should the credentials provided be invalid, the HTTP handler responds with a Unauthorized (401) response code.
+// Currently, the function only allows the upload of PDF files. This will soon change, however.
+// TODO change from PDF to HTML
 func uploadLesson(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 
 	username, password, authOK := r.BasicAuth()
 
 	grade, err := strconv.Atoi(requestVars["grade"])
-	fileName := "lessons/" + strconv.Itoa(grade) + "/"
+	fileName := "lessons/" + requestVars["subject"] + "/" + strconv.Itoa(grade) + "/"
 
 	responseCode := http.StatusOK
 

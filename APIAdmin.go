@@ -30,6 +30,9 @@ import (
 	"time"
 )
 
+// downloadLogs will download all of the logs currently present in the "log" folder.
+// It will create a ZIP archive out of the 3 current logs and send them to the client, provided the credentials
+// match with the ones saved inside of the HTTPServer.json configuration file.
 func downloadLogs(w http.ResponseWriter, r *http.Request) {
 
 	username, password, authOK := r.BasicAuth()
@@ -67,6 +70,8 @@ func downloadLogs(w http.ResponseWriter, r *http.Request) {
 	os.Remove("log/VianuEdu_Server_Logs-" + strconv.Itoa(year) + "-" + month.String() + "-" + strconv.Itoa(day) + ".zip")
 }
 
+// ZipFiles creates a ZIP archive by receiving the filepath to each of the respective files.
+// The first parameter determines the filepath of the ZIP archive, while the second parameter determines the files to be inserted into the archive.
 func ZipFiles(filename string, files []string) error {
 
 	newfile, err := os.Create(filename)

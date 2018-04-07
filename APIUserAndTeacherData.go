@@ -141,6 +141,8 @@ func getTeacher(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Gets the teacher ID by checking the database for the user with the provided username and password
+// Will return ID in text/plain form.
 func findTeacherID(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -177,6 +179,11 @@ func findTeacherID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// registerStudent adds the provided Student object to the database, provided the body contains valid JSON for a Student
+// object.
+//
+// If it isn't valid, then the HTTP handler returns a Bad Request (400) response code.
+// If the student if successfully registered, then the handler returns the ID for the brand-new created student.
 func registerStudent(w http.ResponseWriter, r *http.Request) {
 	templateFile, err := os.Open("templates/StudentTemplate.json")
 	if err != nil {
@@ -223,6 +230,11 @@ func registerStudent(w http.ResponseWriter, r *http.Request) {
 	}).Info("registerStudent hit")
 }
 
+// registerTeacher adds the provided Teacher object to the database, provided the body contains valid JSON for a Teacher
+// object.
+//
+// If it isn't valid, then the HTTP handler returns a Bad Request (400) response code.
+// If the teacher if successfully registered, then the handler returns the ID for the brand-new created teacher.
 func registerTeacher(w http.ResponseWriter, r *http.Request) {
 	templateFile, err := os.Open("templates/TeacherTemplate.json")
 	if err != nil {

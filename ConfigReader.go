@@ -26,6 +26,11 @@ import (
 	"os"
 )
 
+// GetListenPort reads the configuration file HTTPServer.json for the HTTP server listening port.
+//
+// It extracts the config file JSON into memory and parses it, looking for the listenPort entry.
+// The configuration file must follow the template provided with the source code and release distribution,
+// otherwise the server exits immediately.
 func GetListenPort() int64 {
 
 	configFile, err := os.Open("config/HTTPServer.json")
@@ -52,6 +57,13 @@ func GetListenPort() int64 {
 	return listenPort
 }
 
+// GetDBConnectionURL reads the configuration file DatabaseSettings.json for the connection URL required for the mgo
+// driver to successfully connect to the MongoDB instance.
+//
+// It extracts the config file JSON into memory and parses it, looking for all entries, and compiles them into a valid
+// URL that can be used by the driver.
+// The configuration file must follow the template provided with the source code and release distribution,
+// otherwise the server exits immediately.
 func GetDBConnectionURL() string {
 	configFile, err := os.Open("config/DatabaseSettings.json")
 	if err != nil {
@@ -104,6 +116,12 @@ func GetDBConnectionURL() string {
 	return connectionURL
 }
 
+// getDBName reads the configuration file DatabaseSettings.json for the name of the database on the MongoDB instance
+// which contains the predefined VianuEdu schema. The schema is defined in README.md
+//
+// This method extracts the config file JSON into memory and parses it, looking for the "databaseName" entry
+// The configuration file must follow the template provided with the source code and release distribution,
+// otherwise the server exits immediately.
 func getDBName() string {
 	configFile, err := os.Open("config/DatabaseSettings.json")
 	if err != nil {
@@ -130,6 +148,13 @@ func getDBName() string {
 	return dbName
 }
 
+// getAdminCreds reads the configuration file HTTPServer.json for the credentials required for all administrative
+// functions found in APIAdmin.go
+//
+// This method extracts the config file JSON into memory and parses it, looking for the "adminUser" and "adminPass"
+// entry.
+// The configuration file must follow the template provided with the source code and release distribution,
+// otherwise the server exits immediately.
 func GetAdminCreds() (string, string) {
 
 	configFile, err := os.Open("config/HTTPServer.json")
@@ -163,6 +188,11 @@ func GetAdminCreds() (string, string) {
 	return adminUser, adminPass
 }
 
+// ShouldIGoSecure reads the configuration file HTTPServer.json and checks whether the current server instance should
+// restrict all communication to TLS-only (HTTPS). The server will automatically take care of all redirects and
+// everything in between.
+// The configuration file must follow the template provided with the source code and release distribution,
+// otherwise the server exits immediately.
 func ShouldIGoSecure() (bool, string, string) {
 	configFile, err := os.Open("config/HTTPServer.json")
 	if err != nil {

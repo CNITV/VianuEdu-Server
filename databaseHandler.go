@@ -31,6 +31,8 @@ import (
 var session *mgo.Session
 var dbName string
 
+// ConnectToDatabase links the session variable above to the connection URL read from the configuration files. This
+// method obviously requires an Internet connection (but, come on, this is a server). It also reads the database name.
 func ConnectToDatabase() {
 	HTTPLogger.Println("[BOOT] Connecting to database...")
 	sessionTemp, err := mgo.Dial(GetDBConnectionURL())
@@ -45,6 +47,12 @@ func ConnectToDatabase() {
 
 }
 
+// GetStudentObjectByID searches the database for a student by ID and extracts one JSON document which has that ID.
+//
+// The original method (the mgo call) returns a JSON array. As such, it is imperative that this method removes the
+// square brackets created by the string representation of the []bson.M variable.
+//
+// If no student is found by that ID, the method returns "notFound".
 func GetStudentObjectByID(id string) string {
 	var queryMap []bson.M
 
@@ -76,6 +84,12 @@ func GetStudentObjectByID(id string) string {
 	return result
 }
 
+// GetTeacherObjectByID searches the database for a teacher by ID and extracts one JSON document which has that ID.
+//
+// The original method (the mgo call) returns a JSON array. As such, it is imperative that this method removes the
+// square brackets created by the string representation of the []bson.M variable.
+//
+// If no teacher is found by that ID, the method returns "notFound".
 func GetTeacherObjectByID(id string) string {
 	var queryMap []bson.M
 
@@ -107,6 +121,12 @@ func GetTeacherObjectByID(id string) string {
 	return result
 }
 
+// FindTeacherID searches the database for any teacher with the username and password provided and returns their ID.
+//
+// The session initially finds the JSON document for the teacher, removes the square brackets encountered in by the
+// string representation of a []bson.M variable, and then parses the JSON document obtained for the ID and returns it.
+//
+// If no teacher is found by that username and password, then the method returns "notFound".
 func FindTeacherID(user string, password string) string {
 	var queryMap []bson.M
 
@@ -144,6 +164,12 @@ func FindTeacherID(user string, password string) string {
 	return result
 }
 
+// FindStudentID searches the database for any student with the username and password provided and returns their ID.
+//
+// The session initially finds the JSON document for the student, removes the square brackets encountered in by the
+// string representation of a []bson.M variable, and then parses the JSON document obtained for the ID and returns it.
+//
+// If no student is found by that username and password, then the method returns "notFound".
 func FindStudentID(user string, password string) string {
 	var queryMap []bson.M
 
@@ -181,6 +207,10 @@ func FindStudentID(user string, password string) string {
 	return result
 }
 
+// RegisterStudent merely adds a JSON Student document on the database in the right collection.
+//
+// This function validates nothing from the document, so any method that might call this one must be certain the
+// inserted document is valid JSON for a Student object.
 func RegisterStudent(body string) {
 	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
 
@@ -196,6 +226,10 @@ func RegisterStudent(body string) {
 	}
 }
 
+// RegisterStudent merely adds a JSON Teacher document on the database in the right collection.
+//
+// This function validates nothing from the document, so any method that might call this one must be certain the
+// inserted document is valid JSON for a Teacher object.
 func RegisterTeacher(body string) {
 	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
 
@@ -211,6 +245,13 @@ func RegisterTeacher(body string) {
 	}
 }
 
+// GetAnswerSheet searches the database for a JSON Answer Sheet associated with a specific student on a specific test ID
+// and returns it.
+//
+// The session initially finds the JSON document with the aforementioned conditions, removes the square brackets
+// inherent with the string representation of a []bson.M variable and returns it.
+//
+// If no such answer sheet is found, the method returns "notFound".
 func GetAnswerSheet(student string, testID string) string {
 	var queryMap []bson.M
 
@@ -253,6 +294,10 @@ func GetAnswerSheet(student string, testID string) string {
 	return result
 }
 
+// AddAnswerSheet adds an Answer Sheet JSON document to the database in the right collection.
+//
+// This function validates nothing from the document, so any method that might call this one must be certain the
+// inserted document is valid JSON for an AnswerSheet object.
 func AddAnswerSheet(answerSheet string) {
 	submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
 
@@ -268,6 +313,13 @@ func AddAnswerSheet(answerSheet string) {
 	}
 }
 
+// GetGrade searches the database for a JSON Grade associated with a specific student on a specific test ID
+// and returns it.
+//
+// The session initially finds the JSON document with the aforementioned conditions, removes the square brackets
+// inherent with the string representation of a []bson.M variable and returns it.
+//
+// If no such grade is found, the method returns "notFound".
 func GetGrade(studentUser string, testID string) string {
 
 	testType := GetTestType(testID)
@@ -298,6 +350,13 @@ func GetGrade(studentUser string, testID string) string {
 
 }
 
+// AddGrade adds a Grade JSON document to the database in the right collection.
+//
+// The method checks which subject the grade is for by calling GetTestType(testID) and adds the grade. If it is
+// successful, the method deletes the answer sheet JSON document from which the grade was constructed from.
+//
+// This function validates nothing from the document, so any method that might call this one must be certain the
+// inserted document is valid JSON for an Grade object.
 func AddGrade(grade string, testID string) {
 	testType := GetTestType(testID)
 
@@ -327,6 +386,7 @@ func AddGrade(grade string, testID string) {
 	}
 }
 
+// GetTestType checks the "VianuEdu.TestList" collection for the course the test ID provided is for.
 func GetTestType(testID string) string {
 
 	var testQuery []bson.M

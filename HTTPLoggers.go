@@ -24,7 +24,10 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// HTTPLogger is a logger linked to HTTPServer.log file. It uses the logrus framework.
 var HTTPLogger *logrus.Logger
+
+// APILogger is a logger linked to APIRequests.log file. It uses the logrus framework.
 var APILogger *logrus.Logger
 
 func init() {

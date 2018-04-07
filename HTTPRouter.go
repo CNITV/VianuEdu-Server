@@ -27,6 +27,14 @@ import (
 	"os"
 )
 
+// CreateRouter is... a mess.
+//
+// It uses gorilla/mux to create a router, and it logs absolutely every route constructed. It reads the variables
+// created in HTTPRoutes.go and declares the routes for each of the routes declared in that file. It logs every
+// declaration, and, after that, adds a middleware to the router in order to log every HTTP request that pings the
+// router.
+//
+// For more details about the specific routes, check HTTPRoutes.go
 func CreateRouter() http.Handler {
 
 	router := mux.NewRouter().StrictSlash(true)

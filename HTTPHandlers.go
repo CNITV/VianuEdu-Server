@@ -20,17 +20,21 @@
 package main
 
 import (
-	"net/http"
-	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 	"os"
 )
 
+// dispense404 is a HTTP Handler that prints out a custom 404 page.
+//
+// As it stands, the http.FileServer will not easily allow for custom 404 pages.
+// TODO implement custom 404 for static site.
 func dispense404(w http.ResponseWriter, r *http.Request) {
 	templateFile, err := os.Open("errors/404.html")
 	if err != nil {
-		log.WithFields(log.Fields{
+		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Fatal("Error opening 404 template file!")
 	}
@@ -38,7 +42,7 @@ func dispense404(w http.ResponseWriter, r *http.Request) {
 
 	HTMLOutput, err := ioutil.ReadAll(templateFile)
 	if err != nil {
-		log.WithFields(log.Fields{
+		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Fatal("Error reading 404 template variable!")
 	}
