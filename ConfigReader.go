@@ -202,8 +202,7 @@ func ShouldIGoSecure() (bool, string, string) {
 		}
 
 		return true, certFile, keyFile
-	} else {
-		HTTPLogger.Warn("[BOOT][WARN] TLS disabled! Recheck configuration if this is non-intentional!")
-		return false, "", ""
 	}
+	HTTPLogger.Warn("[BOOT][WARN] TLS disabled! Recheck configuration if this is non-intentional!")
+	return false, "", ""
 }
