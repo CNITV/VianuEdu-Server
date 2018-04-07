@@ -1,5 +1,8 @@
 {
   "listenPort": 80,
   "adminUser": "[CONFIDENTIAL]",
-  "adminPass": "[CONFIDENTIAL]"
+  "adminPass": "[CONFIDENTIAL]",
+  "enableTLS": true,
+  "certFile": "[GENERIC CERTIFICATE PATH HERE]",
+  "keyFile": "[GENERIC PRIVATE KEY PATH HERE]"
 }

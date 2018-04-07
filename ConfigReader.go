@@ -146,19 +146,64 @@ func GetAdminCreds() (string, string) {
 			"error": err,
 		}).Fatal("Error reading HTTPServer configuration variable!")
 	}
-	HTTPLogger.Println("[BOOT] Reading listen port...")
+	HTTPLogger.Println("[BOOT] Reading admin credentials...")
 	adminUser, err := jsonparser.GetString(mainConfig, "adminUser")
 	if err != nil {
 		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
-		}).Fatal("Error parsing HTTPServer configuration file! (can't parse listenPort)")
+		}).Fatal("Error parsing HTTPServer configuration file! (can't parse adminUser)")
 	}
 	adminPass, err := jsonparser.GetString(mainConfig, "adminPass")
 	if err != nil {
 		HTTPLogger.WithFields(logrus.Fields{
 			"error": err,
-		}).Fatal("Error parsing HTTPServer configuration file! (can't parse listenPort)")
+		}).Fatal("Error parsing HTTPServer configuration file! (can't parse adminPass)")
 	}
 
 	return adminUser, adminPass
+}
+
+func ShouldIGoSecure() (bool, string, string) {
+	configFile, err := os.Open("config/HTTPServer.json")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error opening HTTPServer configuration file!")
+	}
+	defer configFile.Close()
+
+	mainConfig, err := ioutil.ReadAll(configFile)
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error reading HTTPServer configuration variable!")
+	}
+	HTTPLogger.Println("[BOOT] Reading enableTLS value...")
+	value, err := jsonparser.GetBoolean(mainConfig, "enableTLS")
+	if err != nil {
+		HTTPLogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error parsing HTTPServer configuration file! (can't parse enableTLS)")
+	}
+
+	if value {
+		HTTPLogger.Println("[BOOT] TLS enabled! Reading TLS key files...")
+		keyFile, err := jsonparser.GetString(mainConfig, "keyFile")
+		if err != nil {
+			HTTPLogger.WithFields(logrus.Fields{
+				"error": err,
+			}).Fatal("Error parsing HTTPServer configuration file! (can't parse keyFile)")
+		}
+		certFile, err := jsonparser.GetString(mainConfig, "certFile")
+		if err != nil {
+			HTTPLogger.WithFields(logrus.Fields{
+				"error": err,
+			}).Fatal("Error parsing HTTPServer configuration file! (can't parse certFile)")
+		}
+
+		return true, certFile, keyFile
+	} else {
+		HTTPLogger.Warn("[BOOT][WARN] TLS disabled! Recheck configuration if this is non-intentional!")
+		return false, "", ""
+	}
 }
