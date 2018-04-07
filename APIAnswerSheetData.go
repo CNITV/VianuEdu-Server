@@ -40,11 +40,11 @@ import (
 func getAnswerSheet(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 
-	regexTest, _ := regexp.Compile("T-([0123456789])\\w+")
+	regexTest, _ := regexp.Compile(`T-([0123456789])\w+`)
 
 	responseCode := http.StatusOK
 
-	if regexTest.Match([]byte(requestVars["testID"])) == false {
+	if !regexTest.Match([]byte(requestVars["testID"])) {
 		responseCode = http.StatusBadRequest
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "Test ID invalid!")
@@ -120,11 +120,12 @@ func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 	if responseCode == http.StatusOK {
 
 		//validate JSON!
-		templateString, err := ioutil.ReadAll(templateFile)
+		// we pretty much only care for the final error, since the rest of the stuff here is unlikely to ever fail randomly.
+		templateString, _ := ioutil.ReadAll(templateFile)
 
 		answerSheetTemplate := gojsonschema.NewStringLoader(string(templateString))
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, _ := ioutil.ReadAll(r.Body)
 
 		answerSheetResponse := gojsonschema.NewStringLoader(string(body))
 
@@ -137,13 +138,8 @@ func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 
 		if validation.Valid() {
 			//don't need errors here because I've already validated the JSON and know that it will work
-			user, err := jsonparser.GetString(body, "student", "account", "userName")
-			pass, err := jsonparser.GetString(body, "student", "account", "password")
-			if err != nil {
-				APILogger.WithFields(logrus.Fields{
-					"error": err,
-				}).Warn("Cannot get user and pass from body JSON!")
-			}
+			user, _ := jsonparser.GetString(body, "student", "account", "userName")
+			pass, _ := jsonparser.GetString(body, "student", "account", "password")
 
 			checkID := FindStudentID(user, pass)
 

@@ -69,6 +69,7 @@ func getStudent(w http.ResponseWriter, r *http.Request) {
 
 // Gets the student ID by checking the database for the user with the provided username and password
 // Will return ID in text/plain form.
+// If body is invalid JSON, the HTTP Handler returns a Bad Request (400) response code.
 func findStudentID(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -77,14 +78,32 @@ func findStudentID(w http.ResponseWriter, r *http.Request) {
 		}).Warn("Cannot parse body from request!")
 	}
 
+	responseCode := http.StatusOK
+
 	username, err := jsonparser.GetString(body, "userName")
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot parse JSON body for `userName` entry!")
+		responseCode = http.StatusBadRequest
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid body!")
+		return
+	}
 	password, err := jsonparser.GetString(body, "password")
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot parse JSON body for `password` entry!")
+		responseCode = http.StatusBadRequest
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid body!")
+		return
+	}
 
 	studentID := FindStudentID(username, password)
 
-	responseCode := http.StatusOK
-
-	if studentID == "" {
+	if studentID == "notFound" {
 		w.WriteHeader(http.StatusNotFound)
 		responseCode = http.StatusNotFound
 	}
@@ -143,6 +162,7 @@ func getTeacher(w http.ResponseWriter, r *http.Request) {
 
 // Gets the teacher ID by checking the database for the user with the provided username and password
 // Will return ID in text/plain form.
+// If body is invalid JSON, the HTTP Handler returns a Bad Request (400) response code.
 func findTeacherID(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -151,12 +171,30 @@ func findTeacherID(w http.ResponseWriter, r *http.Request) {
 		}).Warn("Cannot parse body from request!")
 	}
 
+	responseCode := http.StatusOK
+
 	username, err := jsonparser.GetString(body, "userName")
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot parse JSON body for `userName` entry!")
+		responseCode = http.StatusBadRequest
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid body!")
+		return
+	}
 	password, err := jsonparser.GetString(body, "password")
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot parse JSON body for `password` entry!")
+		responseCode = http.StatusBadRequest
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid body!")
+		return
+	}
 
 	teacherID := FindTeacherID(username, password)
-
-	responseCode := http.StatusOK
 
 	if teacherID == "" {
 		w.WriteHeader(http.StatusNotFound)
@@ -192,11 +230,12 @@ func registerStudent(w http.ResponseWriter, r *http.Request) {
 		}).Warn("Could not open StudentTemplate file!")
 	}
 
-	templateString, err := ioutil.ReadAll(templateFile)
+	// we pretty much only care for the final error, since the rest of the stuff here is unlikely to ever fail randomly.
+	templateString, _ := ioutil.ReadAll(templateFile)
 
 	studentTemplate := gojsonschema.NewStringLoader(string(templateString))
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, _ := ioutil.ReadAll(r.Body)
 
 	studentResponse := gojsonschema.NewStringLoader(string(body))
 
@@ -243,11 +282,12 @@ func registerTeacher(w http.ResponseWriter, r *http.Request) {
 		}).Warn("Could not open TeacherTemplate file!")
 	}
 
-	templateString, err := ioutil.ReadAll(templateFile)
+	// we pretty much only care for the final error, since the rest of the stuff here is unlikely to ever fail randomly.
+	templateString, _ := ioutil.ReadAll(templateFile)
 
 	teacherTemplate := gojsonschema.NewStringLoader(string(templateString))
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, _ := ioutil.ReadAll(r.Body)
 
 	teacherResponse := gojsonschema.NewStringLoader(string(body))
 

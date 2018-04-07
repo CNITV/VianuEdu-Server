@@ -159,7 +159,8 @@ func FindTeacherID(user string, password string) string {
 
 	data := []byte(jsonString)
 
-	result, err := jsonparser.GetString(data, "_id", "$oid")
+	// this is guaranteed to work, no need for error-checking
+	result, _ := jsonparser.GetString(data, "_id", "$oid")
 
 	return result
 }
@@ -202,7 +203,8 @@ func FindStudentID(user string, password string) string {
 
 	data := []byte(jsonString)
 
-	result, err := jsonparser.GetString(data, "_id", "$oid")
+	// this is guaranteed to work, no need for error-checking
+	result, _ := jsonparser.GetString(data, "_id", "$oid")
 
 	return result
 }
@@ -217,6 +219,11 @@ func RegisterStudent(body string) {
 	var document map[string]interface{}
 
 	err := json.Unmarshal([]byte(body), &document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not unmarshal byte-slice into document!")
+	}
 
 	err = studentsAccountsCollection.Insert(document)
 	if err != nil {
@@ -226,7 +233,7 @@ func RegisterStudent(body string) {
 	}
 }
 
-// RegisterStudent merely adds a JSON Teacher document on the database in the right collection.
+// RegisterTeacher merely adds a JSON Teacher document on the database in the right collection.
 //
 // This function validates nothing from the document, so any method that might call this one must be certain the
 // inserted document is valid JSON for a Teacher object.
@@ -236,6 +243,11 @@ func RegisterTeacher(body string) {
 	var document map[string]interface{}
 
 	err := json.Unmarshal([]byte(body), &document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not unmarshal byte-slice into document!")
+	}
 
 	err = teachersAccountsCollection.Insert(document)
 	if err != nil {
@@ -272,7 +284,6 @@ func GetAnswerSheet(student string, testID string) string {
 			"studentID": studentID,
 			"testID":    testID,
 		}).Warn("Could not find answer sheet in database!")
-
 	}
 
 	answerSheet, err := bson.MarshalJSON(queryMap)
@@ -304,6 +315,11 @@ func AddAnswerSheet(answerSheet string) {
 	var document map[string]interface{}
 
 	err := json.Unmarshal([]byte(answerSheet), &document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not unmarshal byte-slice into document!")
+	}
 
 	err = submittedAnswersCollection.Insert(document)
 	if err != nil {
@@ -329,6 +345,12 @@ func GetGrade(studentUser string, testID string) string {
 	var gradeQuery []bson.M
 
 	err := gradesCollection.Find(bson.M{"studentAnswerSheet.testID": testID, "studentAnswerSheet.student.account.userName": studentUser}).All(&gradeQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error":  err,
+			"testID": testID,
+		}).Warn("Could not find graade in database!")
+	}
 
 	grade, err := bson.MarshalJSON(gradeQuery)
 	if err != nil {
@@ -365,6 +387,11 @@ func AddGrade(grade string, testID string) {
 	var document map[string]interface{}
 
 	err := json.Unmarshal([]byte(grade), &document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not unmarshal byte-slice into document!")
+	}
 
 	err = gradesCollection.Insert(document)
 	if err != nil {

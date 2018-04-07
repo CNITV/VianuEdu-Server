@@ -101,11 +101,12 @@ func submitGrade(w http.ResponseWriter, r *http.Request) {
 	if responseCode == http.StatusOK {
 
 		//validate JSON!
-		templateString, err := ioutil.ReadAll(templateFile)
+		// we pretty much only care for the final error, since the rest of the stuff here is unlikely to ever fail randomly.
+		templateString, _ := ioutil.ReadAll(templateFile)
 
 		gradeTemplate := gojsonschema.NewStringLoader(string(templateString))
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, _ := ioutil.ReadAll(r.Body)
 
 		gradeResponse := gojsonschema.NewStringLoader(string(body))
 

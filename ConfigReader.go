@@ -148,7 +148,7 @@ func getDBName() string {
 	return dbName
 }
 
-// getAdminCreds reads the configuration file HTTPServer.json for the credentials required for all administrative
+// GetAdminCreds reads the configuration file HTTPServer.json for the credentials required for all administrative
 // functions found in APIAdmin.go
 //
 // This method extracts the config file JSON into memory and parses it, looking for the "adminUser" and "adminPass"
