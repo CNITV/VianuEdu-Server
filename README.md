@@ -1,6 +1,7 @@
 # VianuEdu-Server
 
 [![Build Status](https://travis-ci.org/CNITV/VianuEdu-Server.svg?branch=master)](https://travis-ci.org/CNITV/VianuEdu-Server)
+[![Go Report Card](https://goreportcard.com/badge/github.com/CNITV/VianuEdu-Server)](https://goreportcard.com/report/github.com/CNITV/VianuEdu-Server)
 
 Componenta server-side a VianuEdu.
 
