@@ -27,7 +27,7 @@ import (
 // redirect redirects (duh) all requests from HTTP to HTTPS, if used, and sends a Moved Permanently (301) response code
 // to the client.
 func redirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "https://127.0.0.1:443"+r.RequestURI, http.StatusMovedPermanently)
+	http.Redirect(w, r, "https://"+r.Host+":443"+r.RequestURI, http.StatusMovedPermanently)
 }
 
 // StartServer starts the server. It reads the configurations, creates the router, and boots the HTTP servers
