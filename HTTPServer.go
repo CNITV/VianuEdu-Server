@@ -17,7 +17,7 @@
  * Developed by Matei Gardus <matei@gardus.eu>
  */
 
-package main
+package vianueduserver
 
 import (
 	"net/http"
@@ -30,9 +30,11 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://127.0.0.1:443"+r.RequestURI, http.StatusMovedPermanently)
 }
 
-// This function starts the server. It reads the configurations, creates the router, and boots the HTTP servers
+// StartServer starts the server. It reads the configurations, creates the router, and boots the HTTP servers
 // according to the configuration files.
-func main() {
+func StartServer() {
+
+	StartLoggers()
 
 	HTTPLogger.Println("VianuEdu-Server v0.5-BETA ########################################################## BEGIN NEW LOG ##########################################################")
 	HTTPLogger.Println("[BOOT] Reading configuration file...")

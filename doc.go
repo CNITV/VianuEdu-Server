@@ -18,7 +18,7 @@
  */
 
 /*
-VianuEdu-Server is the server-side component for the VianuEdu educational software
+Package vianueduserver is the server-side component for the VianuEdu educational software.
 
 At its core, it is a simple REST API which internally uses various methods and mgo driver calls in order to interact
 with a MongoDB database with a predefined schema, as follows:
@@ -45,4 +45,4 @@ with a MongoDB database with a predefined schema, as follows:
 	└─── { ... }
 The configuration files contain all variables marked between square brackets.
 */
-package main
+package vianueduserver

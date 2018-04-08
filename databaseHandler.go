@@ -17,7 +17,7 @@
  * Developed by Matei Gardus <matei@gardus.eu>
  */
 
-package main
+package vianueduserver
 
 import (
 	"encoding/json"

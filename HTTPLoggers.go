@@ -17,7 +17,7 @@
  * Developed by Matei Gardus <matei@gardus.eu>
  */
 
-package main
+package vianueduserver
 
 import (
 	"github.com/sirupsen/logrus"
@@ -30,7 +30,10 @@ var HTTPLogger *logrus.Logger
 // APILogger is a logger linked to APIRequests.log file. It uses the logrus framework.
 var APILogger *logrus.Logger
 
-func init() {
+// StartLoggers assigns a lumberjack rotation io.WriteCloser to the loggers.
+//
+// It also adds a TextFormatter to the loggers in order to allow for easy readability of the log files.
+func StartLoggers() {
 
 	HTTPLogger = logrus.New()
 	APILogger = logrus.New()
