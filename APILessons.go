@@ -83,8 +83,7 @@ log:
 // what they teach. This is in development and debate. TODO add check for subject-teacher validation
 //
 // Should the credentials provided be invalid, the HTTP handler responds with a Unauthorized (401) response code.
-// Currently, the function only allows the upload of PDF files. This will soon change, however.
-// TODO change from PDF to HTML
+// Currently, the function only allows the upload of PNG files.
 func uploadLesson(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 
@@ -118,10 +117,10 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Header.Get("Content-Type") != "application/pdf" {
+	if r.Header.Get("Content-Type") != "image/png" {
 		responseCode = http.StatusBadRequest
 		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "Invalid file! Upload a PDF file!")
+		fmt.Fprint(w, "Invalid file! Upload a PNG file!")
 		return
 	}
 
