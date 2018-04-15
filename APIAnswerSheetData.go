@@ -179,3 +179,33 @@ func submitAnswerSheet(w http.ResponseWriter, r *http.Request) {
 		"responseCode": responseCode,
 	}).Info("submitAnswerSheet hit")
 }
+
+func getAnswerSheetsForTest(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+	responseCode := http.StatusOK
+
+	answerSheets := GetAnswerSheetsForTest(requestVars["testID"])
+
+	if answerSheets == "notFound" {
+		responseCode = http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 no answer sheets found for this test!")
+		return
+	}
+	if answerSheets == "" {
+		responseCode = http.StatusInternalServerError
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Oops! We messed up somewhere! Sorry! Try again")
+		return
+	}
+
+	fmt.Fprint(w, answerSheets)
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"testID":       requestVars["testID"],
+		"responseCode": responseCode,
+	}).Info("getAnswerSheetsForTest hit")
+
+}

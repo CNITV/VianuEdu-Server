@@ -104,6 +104,12 @@ var routes = Routes{
 		submitAnswerSheet,
 	},
 	Route{
+		"GetAnswerSheetsForTest",
+		"GET",
+		"/api/getAnswerSheetsForTest/{testID}",
+		getAnswerSheetsForTest,
+	},
+	Route{
 		"GetGrade",
 		"GET",
 		"/api/getGrade/{studentID}/{testID}",

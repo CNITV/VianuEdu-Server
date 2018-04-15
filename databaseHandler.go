@@ -332,6 +332,50 @@ func AddAnswerSheet(answerSheet string) {
 	}
 }
 
+// GetAnswerSheetForTest queries the database for all the submitted answers attached to a test and returns a string
+// containing, on each line, the student ID of each student who has submitted an answer for this test.
+//
+// Will return "notFound" if no answer sheets are found.
+func GetAnswerSheetsForTest(testID string) string {
+	submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
+
+	var testQuery []bson.M
+
+	err := submittedAnswersCollection.Find(bson.M{"testID": testID}).All(&testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not find any answer sheet in database!")
+	}
+
+	query, err := bson.MarshalJSON(testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal query into variable!")
+	}
+
+	result := string(query)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	result = ""
+	_, err = jsonparser.ArrayEach(query, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
+		studentUser, _ := jsonparser.GetString(value, "student", "account", "userName")
+		studentPass, _ := jsonparser.GetString(value, "student", "account", "password")
+
+		result = result + FindStudentID(studentUser, studentPass) + "\n"
+	})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Can't iterate JSON array for answer sheets to evaluate!")
+	}
+	return result
+}
+
 // GetGrade searches the database for a JSON Grade associated with a specific student on a specific test ID
 // and returns it.
 //
