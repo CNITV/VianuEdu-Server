@@ -21,11 +21,14 @@ package vianueduserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/buger/jsonparser"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var session *mgo.Session
@@ -430,4 +433,187 @@ func GetTestType(testID string) string {
 	result, _ := jsonparser.GetString(query, "course")
 
 	return result
+}
+
+// GetTest searches the database for a JSON Test associated with a specific test ID and returns it.
+//
+// The session initially finds the JSON document with the aforementioned conditions, removes the square brackets
+// inherent with the string representation of a []bson.M variable and returns it.
+//
+// If no such test is found, the method returns "notFound".
+func GetTest(testID string) string {
+
+	var testQuery []bson.M
+
+	testType := GetTestType(testID)
+
+	testCollection := session.DB(dbName).C(testType + "Edu.Tests")
+
+	err := testCollection.Find(bson.M{"testID": testID}).All(&testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not query test in database by testID!")
+	}
+
+	test, err := bson.MarshalJSON(testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal getGrade request in JSON!")
+	}
+
+	result := string(test)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	result = strings.Trim(result, "[")
+	result = result[:len(result)-2]
+
+	return result
+}
+
+// GetTestQueue searches the database for all tests a specific class might need to take and filters them by specific
+// conditions.
+//
+// Essentially, this takes a JSON array for every single test a class might be able to take and filters them by seeing
+// if the time has expired for the test.
+//
+// If there is no test to be taken, the method returns an empty string.
+func GetTestQueue(subject string, grade int64, gradeLetter string) string {
+
+	var testQuery []bson.M
+
+	testCollection := session.DB(dbName).C(subject + "Edu.Tests")
+
+	err := testCollection.Find(bson.M{"grade": grade, "gradeLetter": gradeLetter}).All(&testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"err": err,
+		}).Warn("Cannot find tests in database for this grade!")
+	}
+
+	testArray, err := bson.MarshalJSON(testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"err": err,
+		}).Warn("Cannot marshal testArray variable!")
+	}
+
+	result := string(testArray)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	result = ""
+	_, err = jsonparser.ArrayEach(testArray, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		startTime, err := jsonparser.GetString(value, "startTime")
+		if err != nil {
+			return
+		}
+		endTime, err := jsonparser.GetString(value, "endTime")
+		if err != nil {
+			return
+		}
+		testID, err := jsonparser.GetString(value, "testID")
+		if err != nil {
+			return
+		}
+
+		const layout = "Jan 2, 2006 3:04:05 PM"
+
+		start, _ := time.Parse(layout, startTime)
+		end, _ := time.Parse(layout, endTime)
+
+		now := time.Now()
+
+		if start.Before(now) && end.After(now) {
+			result = result + testID + "\n"
+		}
+	})
+
+	return result
+}
+
+// GetNextTestID queries the database for the last test added to it, and returns the next test ID to be used.
+//
+// i.e If the last test ID taken is T-000001, then the next test ID is T-000002, so it returns the next one.
+func GetNextTestID() string {
+
+	var testQuery []bson.M
+
+	testList := session.DB(dbName).C("VianuEdu.TestList")
+
+	err := testList.Find(bson.M{}).Sort("-_id").Limit(1).All(&testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot find stuff in VianuEdu.TestList!")
+
+	}
+	query, err := bson.MarshalJSON(testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot marshal variable for GetNextTestID!")
+	}
+
+	formatter := string(query)
+	formatter = strings.Trim(formatter, "[")
+	formatter = formatter[:len(formatter)-2]
+
+	query = []byte(formatter)
+	lastTestID, _ := jsonparser.GetString(query, "_id")
+	testNumber, _ := strconv.Atoi(lastTestID[2:])
+	testNumber++
+	newTestNumber := fmt.Sprintf("%06d", testNumber)
+	newTestID := "T-" + newTestNumber
+	return newTestID
+}
+
+// AddGrade adds a Test JSON document to the database in the right collection.
+//
+// This function validates nothing from the document, so any method that might call this one must be certain the
+// inserted document is valid JSON for an Test object.
+func AddTest(subject string, test string, testID string) {
+	testList := session.DB(dbName).C("VianuEdu.TestList")
+
+	var testProps = []byte("{\n" +
+		"    \"_id\": \"" + testID + "\", \n" +
+		"    \"course\": \"" + subject + "\"\n" +
+		"}")
+
+	var document map[string]interface{}
+	err := json.Unmarshal(testProps, &document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot unmarshal into document! (How, though? This part is hardcoded)")
+	}
+
+	err = testList.Insert(document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot insert test properties in database!")
+	}
+
+	var document2 map[string]interface{}
+	err = json.Unmarshal([]byte(test), &document2)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot unmarshal test into document!")
+	}
+
+	testCollection := session.DB(dbName).C(subject + "Edu.Tests")
+	err = testCollection.Insert(document2)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot insert test in database!")
+	}
 }

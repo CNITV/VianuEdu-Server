@@ -128,6 +128,30 @@ var routes = Routes{
 		uploadLesson,
 	},
 	Route{
+		"GetTest",
+		"GET",
+		"/api/getTest/{testID}",
+		getTest,
+	},
+	Route{
+		"GetNextTestID",
+		"GET",
+		"/api/getNextTestID",
+		getNextTestID,
+	},
+	Route{
+		"CreateTest",
+		"POST",
+		"/api/createTest/{subject}",
+		createTest,
+	},
+	Route{
+		"GetTestQueue",
+		"GET",
+		"/api/getTestQueue/{subject}/{studentID}",
+		getTestQueue,
+	},
+	Route{
 		"AdminDownloadLogs",
 		"GET",
 		"/api/downloadLogs",
