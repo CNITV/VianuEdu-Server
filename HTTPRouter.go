@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 )
 
@@ -57,6 +58,9 @@ func CreateRouter() http.Handler {
 	}
 
 	router.NotFoundHandler = http.HandlerFunc(dispense404)
+
+	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring debug/pprof routes...")
+	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 
 	HTTPLogger.WithFields(logrus.Fields{}).Info("[BOOT] Configuring lessons download mapping...")
 	router.Methods("GET").

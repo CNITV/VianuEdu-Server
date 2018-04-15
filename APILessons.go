@@ -131,6 +131,10 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Warn("Cannot open file for writing!")
+		responseCode = http.StatusInternalServerError
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "We messed up! We can't write your lesson to disk!")
+		return
 	}
 
 	defer out.Close()
@@ -140,6 +144,10 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
 		}).Warn("Cannot copy body into file!")
+		responseCode = http.StatusInternalServerError
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "We messed up! We can't copy your body to the file we just opened!")
+		return
 	}
 
 	fmt.Fprint(w, "File uploaded successfully!")
@@ -148,5 +156,5 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		"host":         r.RemoteAddr,
 		"userAgent":    r.UserAgent(),
 		"responseCode": responseCode,
-	}).Info("listLessons hit")
+	}).Info("uploadLesson hit")
 }
