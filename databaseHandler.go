@@ -332,7 +332,7 @@ func AddAnswerSheet(answerSheet string) {
 	}
 }
 
-// GetAnswerSheetForTest queries the database for all the submitted answers attached to a test and returns a string
+// GetAnswerSheetsForTest queries the database for all the submitted answers attached to a test and returns a string
 // containing, on each line, the student ID of each student who has submitted an answer for this test.
 //
 // Will return "notFound" if no answer sheets are found.
@@ -554,16 +554,16 @@ func GetTestQueue(subject string, grade int64, gradeLetter string) string {
 
 	result = ""
 	_, err = jsonparser.ArrayEach(testArray, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
-		startTime, err1 := jsonparser.GetString(value, "startTime")
-		if err1 != nil {
+		startTime, err2 := jsonparser.GetString(value, "startTime")
+		if err2 != nil {
 			return
 		}
-		endTime, err1 := jsonparser.GetString(value, "endTime")
-		if err1 != nil {
+		endTime, err2 := jsonparser.GetString(value, "endTime")
+		if err2 != nil {
 			return
 		}
-		testID, err1 := jsonparser.GetString(value, "testID")
-		if err1 != nil {
+		testID, err2 := jsonparser.GetString(value, "testID")
+		if err2 != nil {
 			return
 		}
 
