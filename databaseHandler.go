@@ -509,17 +509,17 @@ func GetTestQueue(subject string, grade int64, gradeLetter string) string {
 	}
 
 	result = ""
-	_, err = jsonparser.ArrayEach(testArray, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		startTime, err := jsonparser.GetString(value, "startTime")
-		if err != nil {
+	_, err = jsonparser.ArrayEach(testArray, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
+		startTime, err1 := jsonparser.GetString(value, "startTime")
+		if err1 != nil {
 			return
 		}
-		endTime, err := jsonparser.GetString(value, "endTime")
-		if err != nil {
+		endTime, err1 := jsonparser.GetString(value, "endTime")
+		if err1 != nil {
 			return
 		}
-		testID, err := jsonparser.GetString(value, "testID")
-		if err != nil {
+		testID, err1 := jsonparser.GetString(value, "testID")
+		if err1 != nil {
 			return
 		}
 
@@ -534,7 +534,11 @@ func GetTestQueue(subject string, grade int64, gradeLetter string) string {
 			result = result + testID + "\n"
 		}
 	})
-
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Unable to iterate JSON array!")
+	}
 	return result
 }
 
@@ -574,7 +578,7 @@ func GetNextTestID() string {
 	return newTestID
 }
 
-// AddGrade adds a Test JSON document to the database in the right collection.
+// AddTest adds a Test JSON document to the database in the right collection.
 //
 // This function validates nothing from the document, so any method that might call this one must be certain the
 // inserted document is valid JSON for an Test object.

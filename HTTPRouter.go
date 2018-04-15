@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	// Used in order to allow for performance profiling on the run server
 	_ "net/http/pprof"
 	"os"
 )
