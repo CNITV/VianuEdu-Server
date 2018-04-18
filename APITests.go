@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func getTest(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +42,22 @@ func getTest(w http.ResponseWriter, r *http.Request) {
 		responseCode = http.StatusNotFound
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "404 test not found!")
+		return
+	}
+
+	startTime, _ := jsonparser.GetString([]byte(test), "startTime")
+
+	const layout = "Jan 2, 2006 3:04:05 PM"
+
+	start, _ := time.Parse(layout, startTime)
+
+	now := time.Now()
+
+	if now.Before(start) {
+		responseCode = http.StatusForbidden
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Nice try, but this test isn't available yet! Nice thinking, though! You should work for the"+
+			" project, you might be useful for this software!")
 		return
 	}
 
@@ -182,5 +199,5 @@ func createTest(w http.ResponseWriter, r *http.Request) {
 		"teacherID":    teacherID,
 		"testID":       testID,
 		"responseCode": responseCode,
-	}).Info("submitGrade hit")
+	}).Info("createTest hit")
 }
