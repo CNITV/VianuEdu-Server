@@ -146,6 +146,7 @@ func createTest(w http.ResponseWriter, r *http.Request) {
 		responseCode = http.StatusUnauthorized
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "Invalid authentication scheme!")
+		return
 	}
 
 	//see if teacher exists
@@ -153,6 +154,7 @@ func createTest(w http.ResponseWriter, r *http.Request) {
 		responseCode = http.StatusUnauthorized
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "Invalid username and password combination!")
+		return
 	}
 
 	//let's go!
