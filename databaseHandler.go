@@ -567,12 +567,14 @@ func GetTestQueue(subject string, grade int64, gradeLetter string) string {
 			return
 		}
 
+		zone, _ := time.LoadLocation("Europe/Bucharest")
+
 		const layout = "Jan 2, 2006 3:04:05 PM"
 
-		start, _ := time.Parse(layout, startTime)
-		end, _ := time.Parse(layout, endTime)
+		start, _ := time.ParseInLocation(layout, startTime, zone)
+		end, _ := time.ParseInLocation(layout, endTime, zone)
 
-		now := time.Now()
+		now := time.Now().In(zone)
 
 		if start.Before(now) && end.After(now) {
 			result = result + testID + "\n"

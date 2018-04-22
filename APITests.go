@@ -49,9 +49,11 @@ func getTest(w http.ResponseWriter, r *http.Request) {
 
 	const layout = "Jan 2, 2006 3:04:05 PM"
 
-	start, _ := time.Parse(layout, startTime)
+	zone, _ := time.LoadLocation("Europe/Bucharest")
 
-	now := time.Now()
+	start, _ := time.ParseInLocation(layout, startTime, zone)
+
+	now := time.Now().In(zone)
 
 	if now.Before(start) {
 		responseCode = http.StatusForbidden
