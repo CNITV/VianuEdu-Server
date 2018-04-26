@@ -667,3 +667,88 @@ func AddTest(subject string, test string, testID string) {
 		}).Warn("Cannot insert test in database!")
 	}
 }
+
+// EditTest updates a test in the database which has a specific test ID.
+//
+// This function validates nothing from the document, so any method that might call this one must be certain the
+// inserted document is valid JSON for an Test object.
+func EditTest(subject string, test string, testID string) {
+	var document2 map[string]interface{}
+	err := json.Unmarshal([]byte(test), &document2)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot unmarshal test into document!")
+	}
+
+	testCollection := session.DB(dbName).C(subject + "Edu.Tests")
+	err = testCollection.Update(bson.M{"testID": testID}, document2)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot insert test in database!")
+	}
+}
+
+// GetPlannedTests searches the database for all tests a specific course has and filters them by specific
+// conditions.
+//
+// Essentially, this takes a JSON array for every single test a course has and filters them by seeing
+// if the test hasn't started yet.
+//
+// If there is no test to be taken, the method returns an empty string.
+func GetPlannedTests(subject string) string {
+	var testQuery []bson.M
+
+	testCollection := session.DB(dbName).C(subject + "Edu.Tests")
+
+	err := testCollection.Find(bson.M{}).All(&testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"err": err,
+		}).Warn("Cannot find tests in database for this subjects!")
+	}
+
+	testArray, err := bson.MarshalJSON(testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"err": err,
+		}).Warn("Cannot marshal testArray variable!")
+	}
+
+	result := string(testArray)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	result = ""
+	_, err = jsonparser.ArrayEach(testArray, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
+		startTime, err2 := jsonparser.GetString(value, "startTime")
+		if err2 != nil {
+			return
+		}
+		testID, err2 := jsonparser.GetString(value, "testID")
+		if err2 != nil {
+			return
+		}
+
+		zone, _ := time.LoadLocation("Europe/Bucharest")
+
+		const layout = "Jan 2, 2006 3:04:05 PM"
+
+		start, _ := time.ParseInLocation(layout, startTime, zone)
+
+		now := time.Now().In(zone)
+
+		if start.After(now) {
+			result = result + testID + "\n"
+		}
+	})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Unable to iterate JSON array!")
+	}
+	return result
+}

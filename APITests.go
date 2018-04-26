@@ -73,6 +73,55 @@ func getTest(w http.ResponseWriter, r *http.Request) {
 	}).Info("getTest hit")
 }
 
+func getPlannedTests(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+	responseCode := http.StatusOK
+
+	username, password, authOK := r.BasicAuth()
+
+	teacherID := FindTeacherID(username, password)
+
+	if !authOK {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid authentication scheme!")
+		return
+	}
+
+	//see if teacher exists
+	if teacherID == "notFound" {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid username and password combination!")
+		return
+	}
+
+	if !strings.Contains("GeoPhiInfoMath", requestVars["subject"]) {
+		responseCode = http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 course not found")
+		return
+	}
+
+	plannedTests := GetPlannedTests(requestVars["subject"])
+	if plannedTests == "notFound" {
+		responseCode := http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 tests not found!")
+		return
+	}
+
+	fmt.Fprint(w, plannedTests)
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"studentID":    requestVars["studentID"],
+		"subject":      requestVars["subject"],
+		"responseCode": responseCode,
+	}).Info("getPlannedTests hit")
+}
+
 func getTestQueue(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 	responseCode := http.StatusOK
@@ -204,4 +253,92 @@ func createTest(w http.ResponseWriter, r *http.Request) {
 		"testID":       testID,
 		"responseCode": responseCode,
 	}).Info("createTest hit")
+}
+
+func updateTest(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+
+	//first we strip out the authentication from the header
+	username, password, authOK := r.BasicAuth()
+
+	responseCode := http.StatusOK
+
+	teacherID := FindTeacherID(username, password)
+
+	templateFile, _ := os.Open("templates/TestTemplate.json")
+
+	testID := ""
+
+	//then we check to see if authOK
+	if !authOK {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid authentication scheme!")
+		return
+	}
+
+	//see if teacher exists
+	if teacherID == "notFound" {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid username and password combination!")
+		return
+	}
+
+	test := GetTest(requestVars["testID"])
+
+	if test == "notFound" {
+		responseCode := http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 test not found!")
+		return
+	}
+
+	//let's go!
+	if responseCode == http.StatusOK {
+
+		//validate JSON!
+		// we pretty much only care for the final error, since the rest of the stuff here is unlikely to ever fail randomly.
+		templateString, _ := ioutil.ReadAll(templateFile)
+
+		testTemplate := gojsonschema.NewStringLoader(string(templateString))
+
+		body, _ := ioutil.ReadAll(r.Body)
+
+		testResponse := gojsonschema.NewStringLoader(string(body))
+
+		validation, err := gojsonschema.Validate(testTemplate, testResponse)
+		if err != nil {
+			APILogger.WithFields(logrus.Fields{
+				"error": err,
+			}).Warn("Could not validate JSON schema and document for adding test!")
+		}
+
+		if validation.Valid() {
+			testID = requestVars["testID"]
+
+			submittedTestID, _ := jsonparser.GetString(body, "testID")
+
+			if !(testID == submittedTestID) {
+				responseCode := http.StatusBadRequest
+				w.WriteHeader(responseCode)
+				fmt.Fprint(w, "Invalid test ID! Test ID must be the same as previous test upload!")
+				return
+			}
+
+			subject, _ := jsonparser.GetString(body, "course")
+
+			EditTest(subject, string(body), testID)
+
+			fmt.Fprint(w, "Test updated!")
+		}
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"teacherID":    teacherID,
+		"testID":       testID,
+		"responseCode": responseCode,
+	}).Info("updateTest hit")
 }

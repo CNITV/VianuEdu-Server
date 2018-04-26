@@ -152,10 +152,22 @@ var routes = Routes{
 		createTest,
 	},
 	Route{
+		"UpdateTest",
+		"POST",
+		"/api/updateTest/{testID}",
+		updateTest,
+	},
+	Route{
 		"GetTestQueue",
 		"GET",
 		"/api/getTestQueue/{subject}/{studentID}",
 		getTestQueue,
+	},
+	Route{
+		"GetPlannedTests",
+		"GET",
+		"/api/getPlannedTests/{subject}",
+		getPlannedTests,
 	},
 	Route{
 		"AdminDownloadLogs",
