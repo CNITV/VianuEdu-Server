@@ -733,6 +733,10 @@ func GetPlannedTests(subject string) string {
 			return
 		}
 
+		class, err2 := jsonparser.GetString(value, "grade")
+		letter, err2 := jsonparser.GetString(value, "gradeLetter")
+		class = class + letter
+
 		zone, _ := time.LoadLocation("Europe/Bucharest")
 
 		const layout = "Jan 2, 2006 3:04:05 PM"
@@ -742,7 +746,7 @@ func GetPlannedTests(subject string) string {
 		now := time.Now().In(zone)
 
 		if start.After(now) {
-			result = result + testID + "\n"
+			result = result + testID + " // " + class + "\n"
 		}
 	})
 	if err != nil {
