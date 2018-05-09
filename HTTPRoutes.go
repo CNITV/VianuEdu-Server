@@ -140,6 +140,12 @@ var routes = Routes{
 		getTest,
 	},
 	Route{
+		"ViewTest",
+		"GET",
+		"/api/viewTest/{testID}",
+		viewTest,
+	},
+	Route{
 		"GetNextTestID",
 		"GET",
 		"/api/getNextTestID",
