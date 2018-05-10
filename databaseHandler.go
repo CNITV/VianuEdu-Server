@@ -733,9 +733,16 @@ func GetPlannedTests(subject string) string {
 			return
 		}
 
-		class, err2 := jsonparser.GetString(value, "grade")
+		class, err2 := jsonparser.GetInt(value, "grade")
+		if err2 != nil {
+			return
+		}
 		letter, err2 := jsonparser.GetString(value, "gradeLetter")
-		class = class + letter
+		if err2 != nil {
+			return
+		}
+		grade := strconv.Itoa(int(class))
+		grade = grade + letter
 
 		zone, _ := time.LoadLocation("Europe/Bucharest")
 
@@ -746,7 +753,7 @@ func GetPlannedTests(subject string) string {
 		now := time.Now().In(zone)
 
 		if start.After(now) {
-			result = result + testID + " // " + class + "\n"
+			result = result + testID + " // " + grade + "\n"
 		}
 	})
 	if err != nil {
