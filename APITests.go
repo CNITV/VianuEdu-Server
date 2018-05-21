@@ -269,6 +269,10 @@ func createTest(w http.ResponseWriter, r *http.Request) {
 			APILogger.WithFields(logrus.Fields{
 				"error": err,
 			}).Warn("Could not validate JSON schema and document for adding test!")
+			responseCode := http.StatusBadRequest
+			w.WriteHeader(responseCode)
+			fmt.Fprint(w, "Invalid Test object!")
+			return
 		}
 
 		if validation.Valid() {
@@ -355,6 +359,10 @@ func updateTest(w http.ResponseWriter, r *http.Request) {
 			APILogger.WithFields(logrus.Fields{
 				"error": err,
 			}).Warn("Could not validate JSON schema and document for adding test!")
+			responseCode := http.StatusBadRequest
+			w.WriteHeader(responseCode)
+			fmt.Fprint(w, "Invalid Test object!")
+			return
 		}
 
 		if validation.Valid() {
