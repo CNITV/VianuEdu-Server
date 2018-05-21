@@ -122,6 +122,12 @@ var routes = Routes{
 		submitGrade,
 	},
 	Route{
+		"GetCurrentGrades",
+		"GET",
+		"/api/getCurrentGrades/{subject}",
+		getCurrentGrades,
+	},
+	Route{
 		"ListLessons",
 		"GET",
 		"/api/listLessons/{subject}/{grade}",

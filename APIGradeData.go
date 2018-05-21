@@ -173,3 +173,48 @@ func submitGrade(w http.ResponseWriter, r *http.Request) {
 		"responseCode": responseCode,
 	}).Info("submitGrade hit")
 }
+
+// getCurrentGrades obtains the grades that a student might have that have been added to the database for the last 150
+// days.
+//
+// The handler returns a Resource Not Found (404) status code if there are no grades to be found in the past 150 days.
+// Otherwise, the method returns the list of test IDs that the grades are attached to for later retrieval.
+func getCurrentGrades(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+
+	//first we strip out the authentication from the header
+	username, password, authOK := r.BasicAuth()
+
+	responseCode := http.StatusOK
+
+	studentID := FindStudentID(username, password)
+
+	//then we check to see if authOK
+	if !authOK {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid authentication scheme!")
+		return
+	}
+
+	//see if student exists
+	if studentID == "notFound" {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid username and password combination!")
+		return
+	}
+
+	//let's go!
+	if responseCode == http.StatusOK {
+		grades := GetGradesForTest(username, password, requestVars["subject"])
+		fmt.Fprint(w, grades)
+	}
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"studentID":    studentID,
+		"responseCode": responseCode,
+	}).Info("getCurrentGrades hit")
+}

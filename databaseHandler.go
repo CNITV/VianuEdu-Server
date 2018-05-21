@@ -763,3 +763,57 @@ func GetPlannedTests(subject string) string {
 	}
 	return result
 }
+
+// GetGradesForTest queries the database for all the grades attached to the provided username and password for the past
+// 150 days.
+//
+// This searches the database for all the grades added to a specific student and checks their IDs for the timestamp in
+// order to run the check for time elapsed on grade submission. Then it extracts the test IDs from each grade and returns
+// them in a string.
+func GetGradesForTest(studentUser, studentPass, subject string) string {
+
+	var gradeQuery []bson.M
+
+	gradeCollection := session.DB(dbName).C(subject + "Edu.Grades")
+
+	zone, _ := time.LoadLocation("Europe/Bucharest")
+
+	checkTime := time.Now().Add(-150 * 24 * time.Hour).In(zone)
+
+	checkerID := bson.NewObjectIdWithTime(checkTime)
+
+	err := gradeCollection.Find(bson.M{"_id": bson.M{"$gte": checkerID}, "studentAnswerSheet.student.account.userName": studentUser, "studentAnswerSheet.student.account.password": studentPass}).All(&gradeQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"err": err,
+		}).Warn("Cannot find grades in database for this subject!")
+	}
+
+	gradeArray, err := bson.MarshalJSON(gradeQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"err": err,
+		}).Warn("Cannot marshal gradeArray variable!")
+	}
+
+	result := string(gradeArray)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	result = ""
+	_, err = jsonparser.ArrayEach(gradeArray, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
+		testID, err2 := jsonparser.GetString(value, "answerKey", "testID")
+		if err2 != nil {
+			return
+		}
+		result = result + testID + "\n"
+	})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Unable to iterate JSON array!")
+	}
+	return result
+}
