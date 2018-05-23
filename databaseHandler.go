@@ -852,7 +852,9 @@ func ListClassbook(grade, gradeLetter string) string {
 
 	teachersAccountsCollection := session.DB(dbName).C("Students.Accounts")
 
-	err := teachersAccountsCollection.Find(bson.M{"grade" : grade, "gradeLetter" : gradeLetter}).All(&queryMap)
+	gradeInt, _ := strconv.Atoi(grade)
+
+	err := teachersAccountsCollection.Find(bson.M{"grade" : gradeInt, "gradeLetter" : gradeLetter}).All(&queryMap)
 
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
