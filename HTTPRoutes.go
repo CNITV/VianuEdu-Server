@@ -92,6 +92,12 @@ var routes = Routes{
 		registerTeacher,
 	},
 	Route{
+		"ListClassbook",
+		"GET",
+		"/api/listClassbook/{grade}/{gradeLetter}",
+		listClassbook,
+	},
+	Route{
 		"GetAnswerSheet",
 		"GET",
 		"/api/getAnswerSheet/{studentID}/{testID}",

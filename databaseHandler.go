@@ -823,7 +823,7 @@ func GetUncorrectedTests(subject string) string {
 
 	submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
 
-	err := submittedAnswersCollection.Find(nil).Distinct("testID", &testQuery)
+	err := submittedAnswersCollection.Find(bson.M{}).Distinct("testID", &testQuery)
 
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
@@ -843,6 +843,43 @@ func GetUncorrectedTests(subject string) string {
 	if result == "" {
 		return "notFound"
 	}
+
+	return result
+}
+
+func ListClassbook(grade, gradeLetter string) string {
+	var queryMap []bson.M
+
+	teachersAccountsCollection := session.DB(dbName).C("Students.Accounts")
+
+	err := teachersAccountsCollection.Find(bson.M{"grade" : grade, "gradeLetter" : gradeLetter}).All(&queryMap)
+
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not find classbook for grade" + grade + gradeLetter + "!")
+
+	}
+
+	catalog, err := bson.MarshalJSON(queryMap)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal listCatalog request in JSON!")
+	}
+
+	jsonString := string(catalog)
+
+	if jsonString == "null\n" {
+		return "notFound"
+	}
+
+	result := ""
+	_, err = jsonparser.ArrayEach(catalog, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
+		id, _ := jsonparser.GetString(value, "_id", "$oid")
+
+		result = result + id + "\n"
+	})
 
 	return result
 }

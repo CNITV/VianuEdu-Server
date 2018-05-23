@@ -320,3 +320,25 @@ func registerTeacher(w http.ResponseWriter, r *http.Request) {
 		"responseCode": responseCode,
 	}).Info("registerTeacher hit")
 }
+
+func listClassbook(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+	responseCode := http.StatusOK
+
+	catalog := ListClassbook(requestVars["grade"], requestVars["gradeLetter"])
+
+	if catalog == "notFound" {
+		responseCode = http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 classbook not found")
+		return
+	}
+
+	fmt.Fprint(w, catalog)
+
+	APILogger.WithFields(logrus.Fields{
+		"host":      r.RemoteAddr,
+		"userAgent": r.UserAgent(),
+		"grade":     requestVars["grade"] + requestVars["gradeLetter"],
+	}).Info("listClassbook hit")
+}
