@@ -817,3 +817,32 @@ func GetGradesForTest(studentUser, studentPass, subject string) string {
 	}
 	return result
 }
+
+func GetUncorrectedTests(subject string) string {
+	var testQuery []string
+
+	submittedAnswersCollection := session.DB(dbName).C("Students.SubmittedAnswers")
+
+	err := submittedAnswersCollection.Find(nil).Distinct("testID", &testQuery)
+
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Unable to query submitted answers for testID!")
+	}
+
+	result := ""
+	for _, testID := range testQuery {
+		testSubject := GetTestType(testID)
+
+		if testSubject == subject {
+			result = result + testID + "\n"
+		}
+	}
+
+	if result == "" {
+		return "notFound"
+	}
+
+	return result
+}

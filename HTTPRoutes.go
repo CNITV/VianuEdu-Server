@@ -182,6 +182,12 @@ var routes = Routes{
 		getPlannedTests,
 	},
 	Route{
+		"GetUncorrectedTests",
+		"GET",
+		"/api/getUncorrectedTests/{subject}",
+		getUncorrectedTests,
+	},
+	Route{
 		"AdminDownloadLogs",
 		"GET",
 		"/api/downloadLogs",

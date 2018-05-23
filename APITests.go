@@ -165,6 +165,55 @@ func getPlannedTests(w http.ResponseWriter, r *http.Request) {
 	}).Info("getPlannedTests hit")
 }
 
+func getUncorrectedTests(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+	responseCode := http.StatusOK
+
+	username, password, authOK := r.BasicAuth()
+
+	teacherID := FindTeacherID(username, password)
+
+	if !authOK {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid authentication scheme!")
+		return
+	}
+
+	//see if teacher exists
+	if teacherID == "notFound" {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid username and password combination!")
+		return
+	}
+
+	if !strings.Contains("GeoPhiInfoMath", requestVars["subject"]) {
+		responseCode = http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 course not found")
+		return
+	}
+
+	uncorrectedTests := GetUncorrectedTests(requestVars["subject"])
+	if uncorrectedTests == "notFound" {
+		responseCode := http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 tests not found!")
+		return
+	}
+
+	fmt.Fprint(w, uncorrectedTests)
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"teacherID":    teacherID,
+		"subject":      requestVars["subject"],
+		"responseCode": responseCode,
+	}).Info("getUncorrectedTests hit")
+}
+
 func getTestQueue(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 	responseCode := http.StatusOK
