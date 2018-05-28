@@ -267,7 +267,7 @@ func RegisterTeacher(body string) {
 func ChangeStudentPassword(studentID, newPassword string) {
 	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
 
-	err := studentsAccountsCollection.UpdateId(studentID, bson.M{"$set": bson.M{"account.password": newPassword}})
+	err := studentsAccountsCollection.UpdateId(bson.ObjectIdHex(studentID), bson.M{"$set": bson.M{"account.password": newPassword}})
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
@@ -282,7 +282,7 @@ func ChangeStudentPassword(studentID, newPassword string) {
 func ChangeTeacherPassword(teacherID, newPassword string) {
 	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
 
-	err := teachersAccountsCollection.UpdateId(teacherID, bson.M{"$set": bson.M{"account.password": newPassword}})
+	err := teachersAccountsCollection.UpdateId(bson.ObjectIdHex(teacherID), bson.M{"$set": bson.M{"account.password": newPassword}})
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error": err,
