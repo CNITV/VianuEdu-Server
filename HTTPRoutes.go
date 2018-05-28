@@ -86,6 +86,18 @@ var routes = Routes{
 		findTeacherID,
 	},
 	Route{
+		"ChangeStudentPassword",
+		"POST",
+		"/api/changeStudentPassword",
+		changeStudentPassword,
+	},
+	Route{
+		"ChangeTeacherPassword",
+		"POST",
+		"/api/changeTeacherPassword",
+		changeTeacherPassword,
+	},
+	Route{
 		"RegisterTeacher",
 		"POST",
 		"/api/registerTeacher",

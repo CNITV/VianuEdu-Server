@@ -217,6 +217,84 @@ func findTeacherID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// changeStudentPassword changes the password of an already added Student in the database.
+//
+// It queries for the ID that is found and changes the password with one provided in the body.
+// If the student isn't found, the handler returns a 401 Unauthorized error.
+func changeStudentPassword(w http.ResponseWriter, r *http.Request) {
+
+	//first we strip out the authentication from the header
+	username, password, authOK := r.BasicAuth()
+
+	responseCode := http.StatusOK
+
+	studentID := FindStudentID(username, password)
+
+	//then we check to see if authOK
+	if !authOK {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid authentication scheme!")
+	}
+
+	//see if student exists
+	if studentID == "notFound" {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid username and password combination!")
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		responseCode = http.StatusBadRequest
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Cannot read body! Try again!")
+	}
+
+	ChangeStudentPassword(studentID, string(body))
+
+	fmt.Fprint(w, "Password changed!")
+}
+
+// changeTeacherPassword changes the password of an already added Teacher in the database.
+//
+// It queries for the ID that is found and changes the password with one provided in the body.
+// If the teacher isn't found, the handler returns a 401 Unauthorized error.
+func changeTeacherPassword(w http.ResponseWriter, r *http.Request) {
+
+	//first we strip out the authentication from the header
+	username, password, authOK := r.BasicAuth()
+
+	responseCode := http.StatusOK
+
+	teacherID := FindTeacherID(username, password)
+
+	//then we check to see if authOK
+	if !authOK {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid authentication scheme!")
+	}
+
+	//see if teacher exists
+	if teacherID == "notFound" {
+		responseCode = http.StatusUnauthorized
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Invalid username and password combination!")
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		responseCode = http.StatusBadRequest
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "Cannot read body! Try again!")
+	}
+
+	ChangeTeacherPassword(teacherID, string(body))
+
+	fmt.Fprint(w, "Password changed!")
+}
+
 // registerStudent adds the provided Student object to the database, provided the body contains valid JSON for a Student
 // object.
 //

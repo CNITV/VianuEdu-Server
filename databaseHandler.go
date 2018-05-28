@@ -260,6 +260,28 @@ func RegisterTeacher(body string) {
 	}
 }
 
+func ChangeStudentPassword(studentID, newPassword string) {
+	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
+
+	err := studentsAccountsCollection.UpdateId(studentID, bson.M{"$set": bson.M{"account.password": newPassword}})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot change password in database for student!")
+	}
+}
+
+func ChangeTeacherPassword(teacherID, newPassword string) {
+	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
+
+	err := teachersAccountsCollection.UpdateId(teacherID, bson.M{"$set": bson.M{"account.password": newPassword}})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot change password in database for teacher!")
+	}
+}
+
 // GetAnswerSheet searches the database for a JSON Answer Sheet associated with a specific student on a specific test ID
 // and returns it.
 //
