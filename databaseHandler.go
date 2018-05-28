@@ -260,6 +260,10 @@ func RegisterTeacher(body string) {
 	}
 }
 
+// ChangeStudentPassword changes the document associated with studentID so that the entry "account.password" contains a
+// new string, newPassword.
+//
+// This only changes documents in the Students.Accounts collection.
 func ChangeStudentPassword(studentID, newPassword string) {
 	studentsAccountsCollection := session.DB(dbName).C("Students.Accounts")
 
@@ -271,6 +275,10 @@ func ChangeStudentPassword(studentID, newPassword string) {
 	}
 }
 
+// ChangeTeacherPassword changes the document associated with teacherID so that the entry "account.password" contains a
+// new string, newPassword.
+//
+// This only changes documents in the Teachers.Accounts collection.
 func ChangeTeacherPassword(teacherID, newPassword string) {
 	teachersAccountsCollection := session.DB(dbName).C("Teachers.Accounts")
 
@@ -840,6 +848,11 @@ func GetGradesForTest(studentUser, studentPass, subject string) string {
 	return result
 }
 
+// GetUncorrectedTests queries the database for all the tests that currently have an AnswerSheet attached to them in the
+// Students.SubmittedAnswers collection.
+//
+// This functions reads all of the distinct values of testID in that collection, sees which one are for which course and
+// returns them, should they match with the provided subject parameter.
 func GetUncorrectedTests(subject string) string {
 	var testQuery []string
 
@@ -869,6 +882,9 @@ func GetUncorrectedTests(subject string) string {
 	return result
 }
 
+// ListClassbook lists all the studentID's matched to a specific grade.
+//
+// It queries the database for all students from the provided grade and extracts their ID's, returning them.
 func ListClassbook(grade, gradeLetter string) string {
 	var queryMap []bson.M
 
@@ -876,7 +892,7 @@ func ListClassbook(grade, gradeLetter string) string {
 
 	gradeInt, _ := strconv.Atoi(grade)
 
-	err := teachersAccountsCollection.Find(bson.M{"grade" : gradeInt, "gradeLetter" : gradeLetter}).All(&queryMap)
+	err := teachersAccountsCollection.Find(bson.M{"grade": gradeInt, "gradeLetter": gradeLetter}).All(&queryMap)
 
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
@@ -904,6 +920,11 @@ func ListClassbook(grade, gradeLetter string) string {
 
 		result = result + id + "\n"
 	})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Unable to iterate JSON array!")
+	}
 
 	return result
 }
