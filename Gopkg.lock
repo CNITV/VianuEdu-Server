@@ -38,6 +38,16 @@
   version = "v1.6.1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/inconshreveable/go-update"
+  packages = [
+    ".",
+    "internal/binarydist",
+    "internal/osext"
+  ]
+  revision = "8152e7eb6ccf8679a64582a66b78519688d156ad"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
@@ -85,6 +95,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a877a643b42be4284b4be816cbfc6082b7ea7043af8ac49e74c03b9846960bde"
+  inputs-digest = "e541342b8d90223b6d4f04a4fdd4fc52901b918c2e120912e5efa1bef2c00a45"
   solver-name = "gps-cdcl"
   solver-version = 1
