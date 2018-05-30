@@ -1,10 +1,12 @@
 {
   "account": {
-    "password": "AmIDisabled",
-    "userName": "guywithnopasswords"
+    "userName": "ucsene_the_student_slayer",
+    "password": "SpaghettiBrokenCode22"
   },
-  "course": "Math",
-  "firstName": "Iancu",
-  "gender": "M",
-  "lastName": "Harghel"
+  "firstName": "Acob",
+  "lastName": "Ucsene",
+  "gender": "F",
+  "course": "Info",
+  "grade": 11,
+  "gradeLetter": "G"
 }

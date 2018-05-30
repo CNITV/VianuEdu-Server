@@ -32,7 +32,7 @@ import (
 	"github.com/buger/jsonparser"
 	"strings"
 	"runtime"
-	update "github.com/inconshreveable/go-update"
+	"github.com/inconshreveable/go-update"
 )
 
 // downloadLogs will download all of the logs currently present in the "log" folder.
