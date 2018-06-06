@@ -211,4 +211,10 @@ var routes = Routes{
 		"/api/downloadLogs",
 		downloadLogs,
 	},
+	Route{
+		"UpdateServer",
+		"GET",
+		"/api/updateServer",
+		updateServer,
+	},
 }
