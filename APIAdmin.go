@@ -22,17 +22,17 @@ package vianueduserver
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/buger/jsonparser"
+	"github.com/inconshreveable/go-update"
 	"github.com/sirupsen/logrus"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
-	"io/ioutil"
-	"github.com/buger/jsonparser"
-	"strings"
 	"runtime"
-	"github.com/inconshreveable/go-update"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // downloadLogs will download all of the logs currently present in the "log" folder.
