@@ -152,9 +152,15 @@ var routes = Routes{
 		listLessons,
 	},
 	Route{
+		"GetLesson",
+		"GET",
+		"/api/getLesson/{course}/{lessonID}",
+		getLesson,
+	},
+	Route{
 		"UploadLesson",
 		"POST",
-		"/api/uploadLesson/{subject}/{grade}",
+		"/api/uploadLesson/{course}/{grade}",
 		uploadLesson,
 	},
 	Route{

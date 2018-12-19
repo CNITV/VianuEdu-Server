@@ -928,3 +928,89 @@ func ListClassbook(grade, gradeLetter string) string {
 
 	return result
 }
+
+func ListLessons(course string, grade int) string {
+	var queryMap []bson.M
+
+	lessonsCollection := session.DB(dbName).C(course + "Edu.Lessons")
+
+	err := lessonsCollection.Find(bson.M{"grade": grade, "course": course}).All(&queryMap)
+
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn(fmt.Sprintf("Could not find lessons for %sEdu course and grade %v!", course, grade))
+	}
+
+	lessonArray, err := bson.MarshalJSON(queryMap)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal listLessons request in JSON!")
+	}
+
+	if string(lessonArray) == "null\n" {
+		return "notFound"
+	}
+
+	result := ""
+	_, err = jsonparser.ArrayEach(lessonArray, func(value []byte, dataType jsonparser.ValueType, offset int, err1 error) {
+		id, _ := jsonparser.GetString(value, "_id", "$oid")
+		result = result + id + "\n"
+	})
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Unable to iterate JSON array!")
+	}
+
+	return result
+}
+
+func AddLesson(course string, grade int, lesson string) {
+	lessonsCollection := session.DB(dbName).C(course + "Edu.Lessons")
+
+	var document map[string]interface{}
+	err := json.Unmarshal([]byte(lesson), &document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot unmarshal lesson into document!")
+	}
+
+	err = lessonsCollection.Insert(document)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot insert lesson in database!")
+	}
+}
+
+func GetLesson(course, id string) string {
+	lessonsCollection := session.DB(dbName).C(course + "Edu.Lessons")
+
+	var lessonQuery []bson.M
+
+	err := lessonsCollection.FindId(bson.ObjectIdHex(id)).One(&lessonQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error":  err,
+			"lessonID": id,
+		}).Warn("Could not find lesson in database!")
+	}
+
+	lesson, err := bson.MarshalJSON(lessonQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Could not marshal getLesson request in JSON!")
+	}
+
+	result := string(lesson)
+
+	if result == "null\n" {
+		return "notFound"
+	}
+
+	return result
+}

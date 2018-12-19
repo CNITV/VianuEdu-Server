@@ -23,30 +23,24 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"io"
+	"github.com/xeipuuv/gojsonschema"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 )
 
-// listLessons lists all of the lessons in the grade and subject provided in the request URL.
+// listLessons lists all of the lessons in the grade and subject provided in the request URL by returning the IDS
+// of the lessons in the database.
 //
 // Currently, the grades are only between 9 and 12. This is mostly due to the fact that, as the project stands, it will
 // be highly unlikely that any 1-8th grade will use this educational software.
-//
-// This function is most primarily constructed in order to allow for easy listing for all the available lessons that one
-// student may be interested in downloading to the client. It is given in such a way that it is very easy to split the
-// strings formed by the filenames into something easily readable.
 func listLessons(w http.ResponseWriter, r *http.Request) {
 	requestVars := mux.Vars(r)
 	responseCode := http.StatusOK
 
 	grade, err := strconv.Atoi(requestVars["grade"])
-	dirName := "lessons/" + requestVars["subject"] + "/" + strconv.Itoa(grade) + "/"
-	lessonsDir, _ := ioutil.ReadDir(dirName)
-	fileList := ""
+	lessonList := ListLessons(requestVars["subject"], grade)
 
 	if err != nil || (grade < 9 || grade > 12) {
 		responseCode = http.StatusBadRequest
@@ -55,19 +49,14 @@ func listLessons(w http.ResponseWriter, r *http.Request) {
 		goto log
 	}
 
-	if len(lessonsDir) == 0 {
+	if lessonList == "notFound" {
 		responseCode = http.StatusNotFound
 		w.WriteHeader(responseCode)
 		fmt.Fprint(w, "404 lessons not found")
 		goto log
 	}
 
-	for _, file := range lessonsDir {
-		name := strings.Split(file.Name(), ".")[0]
-		fileList = fileList + name + "\n"
-	}
-
-	fmt.Fprint(w, fileList)
+	fmt.Fprint(w, lessonList)
 
 log:
 	APILogger.WithFields(logrus.Fields{
@@ -75,6 +64,32 @@ log:
 		"userAgent":    r.UserAgent(),
 		"responseCode": responseCode,
 	}).Info("listLessons hit")
+}
+
+// getLesson simply downloads a lesson from the VianuEdu server to the user.
+//
+// If it is not found, the server returns a 404 Not Found status code.
+func getLesson(w http.ResponseWriter, r *http.Request) {
+	requestVars := mux.Vars(r)
+
+	lesson := GetLesson(requestVars["course"], requestVars["lessonID"])
+	responseCode := http.StatusOK
+
+	if lesson == "notFound" {
+		responseCode = http.StatusNotFound
+		w.WriteHeader(responseCode)
+		fmt.Fprint(w, "404 lesson not found!")
+		return
+	}
+
+	fmt.Fprint(w, lesson)
+
+	APILogger.WithFields(logrus.Fields{
+		"host":         r.RemoteAddr,
+		"userAgent":    r.UserAgent(),
+		"lessonID":       requestVars["lessonID"],
+		"responseCode": responseCode,
+	}).Info("getLesson hit")
 }
 
 // uploadLesson uploads a lesson to the repository, provided it is given valid teacher credentials.
@@ -90,7 +105,7 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 	username, password, authOK := r.BasicAuth()
 
 	grade, err := strconv.Atoi(requestVars["grade"])
-	fileName := "lessons/" + requestVars["subject"] + "/" + strconv.Itoa(grade) + "/"
+	templateFile, _ := os.Open("templates/LessonTemplate.json")
 
 	responseCode := http.StatusOK
 
@@ -117,44 +132,41 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Header.Get("Content-Type") != "image/png" {
-		responseCode = http.StatusBadRequest
-		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "Invalid file! Upload a PNG file!")
-		return
+	//let's go!
+	if responseCode == http.StatusOK {
+
+		//validate JSON!
+		// we pretty much only care for the final error, since the rest of the stuff here is unlikely to ever fail randomly.
+		templateString, _ := ioutil.ReadAll(templateFile)
+
+		lessonTemplate := gojsonschema.NewStringLoader(string(templateString))
+
+		body, _ := ioutil.ReadAll(r.Body)
+
+		lessonResponse := gojsonschema.NewStringLoader(string(body))
+
+		validation, err := gojsonschema.Validate(lessonTemplate, lessonResponse)
+		if err != nil {
+			APILogger.WithFields(logrus.Fields{
+				"error": err,
+			}).Warn("Could not validate JSON schema and document for adding lesson!")
+			responseCode := http.StatusBadRequest
+			w.WriteHeader(responseCode)
+			fmt.Fprint(w, "Invalid Lesson object!")
+			return
+		}
+
+		if validation.Valid() {
+			AddLesson(requestVars["course"], grade, string(body))
+
+			fmt.Fprint(w, "Lesson uploaded!")
+		}
 	}
-
-	fileName = fileName + r.Header.Get("filename")
-
-	out, err := os.Create(fileName)
-	if err != nil {
-		APILogger.WithFields(logrus.Fields{
-			"error": err,
-		}).Warn("Cannot open file for writing!")
-		responseCode = http.StatusInternalServerError
-		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "We messed up! We can't write your lesson to disk!")
-		return
-	}
-
-	defer out.Close()
-
-	_, err = io.Copy(out, r.Body)
-	if err != nil {
-		APILogger.WithFields(logrus.Fields{
-			"error": err,
-		}).Warn("Cannot copy body into file!")
-		responseCode = http.StatusInternalServerError
-		w.WriteHeader(responseCode)
-		fmt.Fprint(w, "We messed up! We can't copy your body to the file we just opened!")
-		return
-	}
-
-	fmt.Fprint(w, "File uploaded successfully!")
 
 	APILogger.WithFields(logrus.Fields{
 		"host":         r.RemoteAddr,
 		"userAgent":    r.UserAgent(),
+		"teacherID":    teacherID,
 		"responseCode": responseCode,
 	}).Info("uploadLesson hit")
 }
