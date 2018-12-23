@@ -157,7 +157,7 @@ func uploadLesson(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if validation.Valid() {
-			AddLesson(requestVars["course"], grade, string(body))
+			AddLesson(requestVars["course"], string(body))
 
 			fmt.Fprint(w, "Lesson uploaded!")
 		}
