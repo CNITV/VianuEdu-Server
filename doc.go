@@ -24,7 +24,10 @@ At its core, it is a simple REST API which internally uses various methods and m
 with a MongoDB database with a predefined schema, as follows:
 	[dbName]
 	│
-	├───[COURSE]Edu.Grades
+	├───[COURSE]Edu.Lessons
+    │   ├───{ ... }
+    │   └───{ ... }
+    ├───[COURSE]Edu.Grades
 	│   ├───{ ... }
 	│   └───{ ... }
 	├───[COURSE]Edu.Tests

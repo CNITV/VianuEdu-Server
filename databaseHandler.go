@@ -497,7 +497,12 @@ func GetTestType(testID string) string {
 
 	testList := session.DB(dbName).C("VianuEdu.TestList")
 
-	testList.FindId(testID).All(&testQuery)
+	err := testList.FindId(testID).All(&testQuery)
+	if err != nil {
+		APILogger.WithFields(logrus.Fields{
+			"error": err,
+		}).Warn("Cannot find test type in database!")
+	}
 
 	query, _ := bson.MarshalJSON(testQuery)
 
@@ -967,7 +972,7 @@ func ListLessons(course string, grade int) string {
 	return result
 }
 
-func AddLesson(course string, grade int, lesson string) {
+func AddLesson(course string, lesson string) {
 	lessonsCollection := session.DB(dbName).C(course + "Edu.Lessons")
 
 	var document map[string]interface{}
@@ -991,7 +996,7 @@ func GetLesson(course, id string) string {
 
 	var lessonQuery []bson.M
 
-	err := lessonsCollection.FindId(bson.ObjectIdHex(id)).One(&lessonQuery)
+	err := lessonsCollection.FindId(bson.ObjectIdHex(id)).All(&lessonQuery)
 	if err != nil {
 		APILogger.WithFields(logrus.Fields{
 			"error":  err,
@@ -1011,6 +1016,9 @@ func GetLesson(course, id string) string {
 	if result == "null\n" {
 		return "notFound"
 	}
+
+	result = strings.Trim(result, "[")
+	result = result[:len(result)-2]
 
 	return result
 }
